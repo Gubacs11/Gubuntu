@@ -3,6 +3,7 @@
 *{box-sizing:border-box}
 html{scroll-behavior:smooth;overflow-x:clip}
 body{margin:0;background:var(--ink);color:var(--white);font-family:'Space Mono',monospace;min-height:100vh;overflow-x:hidden}
+html.modal-open,html.modal-open body{overflow:hidden!important;overscroll-behavior:none}
 button,input{font:inherit}.hidden{display:none!important}
 .crt{position:fixed;inset:0;z-index:100;pointer-events:none;background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(0,0,0,.13) 3px 4px);mix-blend-mode:multiply;opacity:.45}
 .screen{min-height:100vh}.eyebrow{font:10px 'Press Start 2P',monospace;letter-spacing:1px;color:var(--cyan);line-height:1.7}.blink{animation:blink 1s steps(1) infinite;color:var(--green)}
@@ -1037,7 +1038,11 @@ body{font-size:clamp(17px,calc(15px + .2vw),21px);line-height:1.55}.eyebrow{font
 
 .mobile-mode .game-dialog{width:100vw!important;height:100dvh;max-height:100dvh;border-width:0;border-radius:0;margin:0;padding-top:env(safe-area-inset-top);padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right);padding-bottom:env(safe-area-inset-bottom)}
 .mobile-mode .game-modal-head{padding:8px 12px}.mobile-mode .game-modal-head h2{font-size:clamp(12px,3.6vw,18px)}.mobile-mode .game-modal-head .dynamic-layout-badge{display:none}.mobile-mode .game-wallet{min-height:44px}
-.mobile-mode .game-playfield,.mobile-mode .game-stage,.mobile-mode .driving-canvas,.mobile-mode .arcade-canvas,.mobile-mode canvas{touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.mobile-mode .game-playfield,.mobile-mode .game-stage{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.mobile-mode .driving-canvas,.mobile-mode .arcade-canvas,.mobile-mode canvas{touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.mobile-mode .game-playfield{touch-action:pan-y}
+.mobile-mode .game-stage{touch-action:pan-y;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.mobile-mode dialog[open]{overscroll-behavior:contain}
 .mobile-mode .game-stage{padding:8px}.mobile-mode .game-dialog button,.mobile-mode .game-dialog input,.mobile-mode .game-dialog select,.mobile-mode .topbar button,.mobile-mode .submenu-tabs button{min-height:44px}
 .mobile-mode .drive-controls.v2{display:none}.mobile-mode .drive-shell .biome-legend{display:none}.mobile-mode .drive-shell{padding-bottom:0}.mobile-mode .drive-hud{pointer-events:none}
 .mobile-mode .drive-panel{max-width:min(54%,390px);padding:8px 10px;background:rgba(5,3,18,.72);font-size:10px!important}.mobile-mode .outlaw-condition{grid-template-columns:1fr 1fr}
@@ -1368,3 +1373,94 @@ body[data-graphics="low"]{--particle-density:.15}body[data-graphics="medium"]{--
 .salvage-minimap svg{display:block;width:100%;height:100%}
 .salvage-minimap text{font:bold 12px monospace}
 .salvage-minimap .seed{font-size:8px}
+
+/* Build 106: compact, full-viewport phone shell and launch menus. */
+@media(max-width:700px),(orientation:landscape) and (max-height:520px){
+  html.mobile-mode,html.mobile-mode body{min-height:100dvh;background:var(--ink)}
+  html.mobile-mode body{width:100%;overflow-x:clip}
+  .mobile-mode .screen,.mobile-mode .arcade-screen{min-height:100dvh;width:100%;overflow-x:clip}
+  .mobile-mode .menu-life-bg{inset:calc(64px + env(safe-area-inset-top)) 0 0;height:calc(100dvh - 64px - env(safe-area-inset-top))}
+
+  .mobile-mode .topbar{height:calc(64px + env(safe-area-inset-top));min-height:calc(64px + env(safe-area-inset-top));padding:env(safe-area-inset-top) max(8px,env(safe-area-inset-right)) 0 max(8px,env(safe-area-inset-left));gap:7px;flex-wrap:nowrap;align-items:center}
+  .mobile-mode .player-chip{width:44px;min-width:44px;height:44px;padding:0}
+  .mobile-mode .player-chip>span:last-child,.mobile-mode .brand{display:none}
+  .mobile-mode .avatar.small{width:42px;height:42px;font-size:21px;box-shadow:2px 2px #050312}
+  .mobile-mode .header-actions{width:auto;min-width:0;margin-left:auto;gap:6px;flex-wrap:nowrap;justify-content:flex-end}
+  .mobile-mode .header-actions>#toggle-fullscreen,.mobile-mode .header-actions>#open-settings,.mobile-mode .header-actions>#open-progress,.mobile-mode .header-actions>#open-battle-pass,.mobile-mode .header-actions>#open-shop,.mobile-mode .network-status{display:none}
+  .mobile-mode .header-actions .shop-btn{display:grid;place-items:center;width:44px;min-width:44px;height:44px;min-height:44px;padding:0;font-size:16px;box-shadow:2px 2px #050312}
+  .mobile-mode .stats{gap:0}
+  .mobile-mode .stats span{display:flex;align-items:center;gap:5px;height:44px;padding:0 10px;border:2px solid #55478a;background:#09071f;font-size:9px;white-space:nowrap}
+  .mobile-mode .stats span:first-child{display:none}
+
+  .mobile-mode .arcade-sidebar{top:calc(64px + env(safe-area-inset-top));bottom:0;width:min(300px,86vw);padding:12px 10px max(18px,env(safe-area-inset-bottom));gap:3px;overflow-y:auto;overscroll-behavior:contain}
+  .mobile-mode .arcade-sidebar a,.mobile-mode .arcade-sidebar button{min-height:46px;padding:10px 12px;font-size:11px}
+  html.mobile-mode body.sidebar-open .arcade-screen:after{content:"";position:fixed;z-index:35;inset:calc(64px + env(safe-area-inset-top)) 0 0;background:#03020db8;backdrop-filter:blur(2px)}
+
+  .mobile-mode .hero{min-height:0;display:block;padding:48px 16px 26px;text-align:center}
+  .mobile-mode .hero:before{padding:7px 0;font-size:6px}
+  .mobile-mode .hero .hero-title{margin:10px auto 14px;font-size:clamp(28px,9vw,36px);line-height:1.18}
+  .mobile-mode .hero-copy>p:not(.eyebrow){margin:0 auto 18px;max-width:340px;font-size:15px;line-height:1.55}
+  .mobile-mode .hero .pixel-btn{width:100%;min-height:46px;padding:11px 12px}
+  .mobile-mode .hero-continue{margin-top:12px;max-width:none}
+  .mobile-mode .hero-continue button{padding:10px 12px;gap:10px}
+  .mobile-mode .hero-continue button>span{font-size:24px}
+  .mobile-mode .hero-continue em{font-size:10px}
+  .mobile-mode .hero-bg-console,.mobile-mode .arcade-machine,.mobile-mode .menu-life-hint{display:none}
+  .mobile-mode .lobby-panel{margin:0;padding:14px 10px;gap:12px}
+  .mobile-mode .games-section{padding:34px 10px}
+  .mobile-mode .section-heading{gap:12px}
+  .mobile-mode .section-heading h2{font-size:27px}
+  .mobile-mode .game-toolbar{gap:8px}
+  .mobile-mode .filter-row{display:flex;width:100%;padding-bottom:4px;overflow-x:auto;flex-wrap:nowrap;scroll-snap-type:x proximity}
+  .mobile-mode .filter{flex:0 0 auto;min-height:42px;scroll-snap-align:start}
+  .mobile-mode .update-notice{right:max(7px,env(safe-area-inset-right));bottom:max(7px,env(safe-area-inset-bottom));width:calc(100vw - max(14px,env(safe-area-inset-left) + env(safe-area-inset-right)));padding:8px 9px;gap:8px;align-items:center;flex-direction:row}
+  .mobile-mode .update-notice>div{gap:0}.mobile-mode .update-notice b{font-size:7px}.mobile-mode .update-notice small{display:none}.mobile-mode .update-notice button{min-height:40px;padding:7px 9px;font-size:7px;white-space:nowrap}
+
+  .mobile-mode .game-dialog{width:100dvw!important;height:100dvh!important;max-width:100dvw;max-height:100dvh!important}
+  .mobile-mode .game-modal-head{height:calc(58px + env(safe-area-inset-top));min-height:calc(58px + env(safe-area-inset-top));padding:env(safe-area-inset-top) 9px 0;align-items:center;gap:8px}
+  .mobile-mode .game-modal-head>div:first-child{min-width:0;flex:1}
+  .mobile-mode .game-modal-head p{display:none}
+  .mobile-mode .game-modal-head h2{max-width:100%;margin:0;overflow:hidden;font-size:13px;line-height:1.35;text-overflow:ellipsis;white-space:nowrap}
+  .mobile-mode .game-modal-head .modal-tools{width:auto;flex-wrap:nowrap;gap:5px}
+  .mobile-mode .game-wallet{min-height:40px;padding:7px;font-size:8px}
+  .mobile-mode .pause-tool,.mobile-mode .game-modal-head .close-btn{width:40px;height:40px;min-height:40px}
+  .mobile-mode .game-playfield{height:calc(100dvh - 58px - env(safe-area-inset-top));min-height:0}
+  .mobile-mode .game-stage{height:100%;padding:9px 9px max(84px,calc(74px + env(safe-area-inset-bottom)));scrollbar-gutter:auto;scrollbar-width:thin;scrollbar-color:#31f5ff transparent}
+  .mobile-mode .game-stage::-webkit-scrollbar{width:4px}.mobile-mode .game-stage::-webkit-scrollbar-track{background:transparent}.mobile-mode .game-stage::-webkit-scrollbar-thumb{background:#31f5ff;border-radius:4px}
+  .mobile-mode .game-stage:has(.unified-launch){padding:9px 9px max(88px,calc(78px + env(safe-area-inset-bottom)))}
+  .mobile-mode .unified-launch{display:block;width:100%;max-width:520px;margin:0 auto;text-align:left}
+  .mobile-mode .launch-art{height:84px;min-height:84px;margin-bottom:10px}
+  .mobile-mode .launch-art span{font-size:46px;filter:drop-shadow(5px 5px #04020e)}
+  .mobile-mode .launch-copy{align-self:auto}
+  .mobile-mode .launch-copy .eyebrow{margin:4px 0}
+  .mobile-mode .launch-copy h2{margin:6px 0;font-size:18px;line-height:1.3}
+  .mobile-mode .launch-copy>p:not(.eyebrow){display:-webkit-box;margin:6px 0 10px;overflow:hidden;font-size:13px;line-height:1.45;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+  .mobile-mode .launch-option{margin:9px 0;gap:5px}
+  .mobile-mode .launch-option>div{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+  .mobile-mode .launch-option button{min-height:42px;padding:7px 8px;font-size:9px;line-height:1.35}
+  .mobile-mode .launch-stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;margin:9px 0}
+  .mobile-mode .launch-stats span{min-height:54px;padding:7px;font-size:8px}
+  .mobile-mode .launch-stats b{font-size:10px}
+  .mobile-mode .launch-controls{padding:8px}
+  .mobile-mode .launch-controls small{font-size:8px}
+  .mobile-mode .launch-controls b{font-size:10px;line-height:1.45}
+  .mobile-mode .launch-skip{margin:9px 0;font-size:8px}
+  .mobile-mode .launch-hint{display:none}
+  .mobile-mode .launch-actions{position:fixed;z-index:76;left:max(8px,env(safe-area-inset-left));right:max(8px,env(safe-area-inset-right));bottom:max(7px,env(safe-area-inset-bottom));display:grid;grid-template-columns:minmax(88px,.65fr) minmax(170px,1.35fr);gap:7px;margin:0;padding:7px;border:2px solid #44367c;background:#08061df2;box-shadow:0 -8px 24px #050312aa}
+  .mobile-mode .launch-actions button{min-height:48px;padding:8px;font-size:10px}
+}
+
+@media(orientation:landscape) and (max-height:520px){
+  .mobile-mode .topbar{height:calc(52px + env(safe-area-inset-top));min-height:calc(52px + env(safe-area-inset-top))}
+  .mobile-mode .menu-life-bg{inset:calc(52px + env(safe-area-inset-top)) 0 0;height:calc(100dvh - 52px - env(safe-area-inset-top))}
+  .mobile-mode .arcade-sidebar{top:calc(52px + env(safe-area-inset-top))}
+  html.mobile-mode body.sidebar-open .arcade-screen:after{inset:calc(52px + env(safe-area-inset-top)) 0 0}
+  .mobile-mode .hero{padding:38px 18px 18px}
+  .mobile-mode .hero-copy>p:not(.eyebrow){display:none}
+  .mobile-mode .hero .hero-title{font-size:27px}
+  .mobile-mode .launch-art,.mobile-mode .launch-copy>p:not(.eyebrow),.mobile-mode .launch-skip{display:none}
+  .mobile-mode .launch-copy h2{font-size:15px}
+  .mobile-mode .launch-option{margin:6px 0}
+  .mobile-mode .launch-stats{grid-template-columns:repeat(4,minmax(0,1fr));margin:6px 0}
+  .mobile-mode .launch-stats span{min-height:45px;padding:5px}
+}

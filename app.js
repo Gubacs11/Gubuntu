@@ -6,7 +6,7 @@ const storeKey = "gubuntu-arcade-v1";
 const backupKey = `${storeKey}-backups`;
 const saveVersion = 3;
 const APP_VERSION = "1.0.0";
-const BUILD_NUMBER = 103;
+const BUILD_NUMBER = 109;
 const avatars = ["👾", "🤖", "👻", "🦊", "🐸", "🧙", "🥷", "🦖"];
 
 const games = [
@@ -356,8 +356,9 @@ function pixelBurst(x,y,color="#31f5ff"){
 }
 function setMenuPaused(paused){menuRafPaused=paused;document.body.classList.toggle("menu-paused",paused);}
 function updateTopbarCompact(){document.body.classList.toggle("topbar-compact",window.scrollY>80);}
-function openDialogAnimated(dialog,opener=document.activeElement){if(!dialog)return;dialog.dataset.returnFocusId=opener?.id||"";if(dialog.open){dialog.focus?.();return;}dialog.classList.remove("dialog-leaving");dialog.classList.add("dialog-entering");try{dialog.showModal();}catch(err){console.error("Dialog open failed",err);return;}requestAnimationFrame(()=>dialog.classList.remove("dialog-entering"));}
-function closeDialogAnimated(dialog){if(!dialog?.open)return;if(reduceMotion()){dialog.close();return;}dialog.classList.add("dialog-leaving");setTimeout(()=>{dialog.classList.remove("dialog-leaving");if(dialog.open)dialog.close();},180);}
+function syncModalScrollLock(){const locked=Boolean(document.querySelector("dialog[open]"));document.documentElement.classList.toggle("modal-open",locked);document.body.classList.toggle("modal-open",locked);}
+function openDialogAnimated(dialog,opener=document.activeElement){if(!dialog)return;dialog.dataset.returnFocusId=opener?.id||"";if(dialog.open){dialog.focus?.();syncModalScrollLock();return;}dialog.classList.remove("dialog-leaving");dialog.classList.add("dialog-entering");try{dialog.showModal();syncModalScrollLock();}catch(err){console.error("Dialog open failed",err);return;}requestAnimationFrame(()=>dialog.classList.remove("dialog-entering"));}
+function closeDialogAnimated(dialog){if(!dialog?.open)return;if(reduceMotion()){dialog.close();syncModalScrollLock();return;}dialog.classList.add("dialog-leaving");setTimeout(()=>{dialog.classList.remove("dialog-leaving");if(dialog.open)dialog.close();syncModalScrollLock();},180);}
 
 
 function saveUiSettings(){try{localStorage.setItem("gubuntu-ui-settings",JSON.stringify(uiSettings));}catch(err){console.warn("UI settings save failed",err);}}
@@ -4149,7 +4150,7 @@ function init(){
   window.addEventListener("blur",releaseMobileInput);
   document.addEventListener("visibilitychange",()=>{if(document.hidden)releaseMobileInput();});
   navigator.serviceWorker?.addEventListener("controllerchange",()=>{if(sessionStorage.getItem("gubuntu-update-reload")){sessionStorage.removeItem("gubuntu-update-reload");sessionStorage.setItem("gubuntu-updated","1");location.reload();}});
-  document.addEventListener("close",e=>{const id=e.target?.dataset?.returnFocusId;if(id)document.getElementById(id)?.focus?.();},true);
+  document.addEventListener("close",e=>{syncModalScrollLock();const id=e.target?.dataset?.returnFocusId;if(id)document.getElementById(id)?.focus?.();},true);
   saveData();renderProfiles();renderGames();
   $("#footer-version").textContent=`v${APP_VERSION}`;$("#footer-build").textContent=BUILD_NUMBER;
   applyUiSettings();
@@ -4220,7 +4221,8 @@ function init(){
   $(".filter-row").onclick=e=>{const btn=e.target.closest(".filter");if(!btn)return;$$('.filter').forEach(x=>x.classList.remove("active"));btn.classList.add("active");menuFilter=btn.dataset.filter;renderGames(menuFilter);};
   $("#toggle-fullscreen").onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen()}catch{toast("FULLSCREEN IS NOT AVAILABLE")}};
   $("#toggle-sidebar").onclick=()=>document.body.classList.toggle("sidebar-open");
-  $("#arcade-sidebar").onclick=e=>{const item=e.target.closest("[data-nav]");if(!item)return;document.body.classList.remove("sidebar-open");const action=item.dataset.nav;if(action==="daily")$("#daily-challenges")?.scrollIntoView({behavior:"smooth",block:"center"});else if(action==="achievements"||action==="statistics"){progressView=action;renderProgress();openDialogAnimated($("#progress-dialog"))}else if(action==="shop"){renderShop();openDialogAnimated($("#shop-dialog"))}else if(action==="settings"){renderSettings();openDialogAnimated($("#settings-dialog"))}};
+  document.addEventListener("pointerdown",e=>{if(document.body.classList.contains("sidebar-open")&&!e.target.closest("#arcade-sidebar,#toggle-sidebar"))document.body.classList.remove("sidebar-open");});
+  $("#arcade-sidebar").onclick=e=>{const item=e.target.closest("[data-nav]");if(!item)return;document.body.classList.remove("sidebar-open");const action=item.dataset.nav;if(action==="daily")$("#daily-challenges")?.scrollIntoView({behavior:"smooth",block:"center"});else if(action==="achievements"||action==="statistics"||action==="profile"){progressView=action==="profile"?"statistics":action;renderProgress();openDialogAnimated($("#progress-dialog"))}else if(action==="battle"){renderBattlePass();openDialogAnimated($("#battle-pass-dialog"))}else if(action==="shop"){renderShop();openDialogAnimated($("#shop-dialog"))}else if(action==="settings"){renderSettings();openDialogAnimated($("#settings-dialog"))}};
   $("#game-pause-button").onclick=()=>setGamePause(true);
   $("#game-pause-overlay").onclick=e=>{const button=e.target.closest("[data-pause-action]");if(button)handlePauseAction(button.dataset.pauseAction)};
   window.addEventListener("keydown",e=>{if(!$("#game-dialog").open)return;if(launchScreenOpen){if(e.key==="Enter"&&!e.target.matches("input,button")){e.preventDefault();launchGame(currentLaunchId)}else if(e.key==="Escape"){e.preventDefault();closeDialogAnimated($("#game-dialog"));setMenuPaused(false);launchScreenOpen=false}else if(e.key==="ArrowLeft"||e.key==="ArrowRight"){const buttons=$$(".launch-option button");if(!buttons.length)return;e.preventDefault();const active=document.activeElement?.matches?.(".launch-option button")?document.activeElement:buttons.find(button=>button.classList.contains("active"))||buttons[0],index=buttons.indexOf(active),next=buttons[(index+(e.key==="ArrowRight"?1:-1)+buttons.length)%buttons.length];next.focus();next.click()}}else if(activeGame&&e.key==="Escape"){e.preventDefault();setGamePause(!gamePauseOpen)}});
