@@ -73,6 +73,12 @@ footer{display:flex;justify-content:space-between;padding:30px clamp(20px,7vw,11
 .fish-quests{display:grid;gap:8px;margin-bottom:16px}.fish-quests article{display:grid;grid-template-columns:34px 1fr auto;align-items:center;gap:10px;background:#100b2d;border:2px solid #44367c;padding:9px;box-shadow:3px 3px #050312}.fish-quests article.done{border-color:var(--green);box-shadow:3px 3px #050312,0 0 16px rgba(114,255,119,.16)}.fish-quests article.claimed{opacity:.72;filter:saturate(.7)}.fish-quests article>span{font-size:24px;text-align:center}.fish-quests b,.fish-quests small,.fish-quests em{display:block}.fish-quests b{font:8px/1.35 'Press Start 2P';color:var(--yellow)}.fish-quests small{font-size:10px;color:var(--muted);margin-top:5px}.fish-quests em{font-style:normal;color:var(--cyan);font-size:10px;margin-top:5px}.fish-quests i{display:block;height:8px;margin-top:5px;background:#08061d;border:2px solid #55478a}.fish-quests u{display:block;height:100%;background:linear-gradient(90deg,var(--cyan),var(--green),var(--yellow));text-decoration:none}.fish-quests .pixel-btn{font-size:7px;padding:8px;white-space:nowrap}.fish-quests .pixel-btn:disabled{opacity:.55}.catch-line.fresh{animation:catchPop .42s ease-out,catchGlow 1.2s ease-out}.catch-line.fresh .fish-art{animation:catchFishJump .55s cubic-bezier(.2,1.4,.3,1)}@keyframes catchPop{0%{transform:scale(.82);opacity:.2}60%{transform:scale(1.08);opacity:1}100%{transform:scale(1)}}@keyframes catchGlow{0%{text-shadow:0 0 0 var(--cyan)}45%{text-shadow:0 0 18px var(--cyan),0 0 22px var(--yellow)}100%{text-shadow:none}}@keyframes catchFishJump{0%{transform:translateY(22px) rotate(-8deg) scale(.82)}65%{transform:translateY(-10px) rotate(5deg) scale(1.12)}100%{transform:translateY(0) rotate(0) scale(1)}}
 .fish-wrap{position:relative;isolation:isolate}.fish-life-bg{position:absolute;inset:0;width:100%;height:100%;z-index:-1;opacity:.28;image-rendering:pixelated;pointer-events:none;mix-blend-mode:screen}.fish-wrap:before{content:"";position:absolute;inset:-18px;z-index:-2;background:radial-gradient(circle at 25% 12%,rgba(49,245,255,.14),transparent 28%),radial-gradient(circle at 80% 40%,rgba(114,255,119,.1),transparent 28%),linear-gradient(180deg,rgba(8,40,63,.25),rgba(16,11,45,.08));border:2px solid rgba(49,245,255,.1);pointer-events:none}.admin-content{padding:24px;display:grid;gap:20px;background:radial-gradient(circle at 18% 0,rgba(49,245,255,.12),transparent 32%),radial-gradient(circle at 92% 16%,rgba(255,62,181,.14),transparent 30%)}.admin-content section{background:linear-gradient(135deg,rgba(16,11,45,.96),rgba(8,6,29,.98));border:2px solid #44367c;padding:18px;box-shadow:5px 5px #050312}.admin-content h3{font:11px/1.5 'Press Start 2P';color:var(--yellow);margin:0 0 14px}.admin-hero{display:grid;grid-template-columns:1fr auto;align-items:center;gap:18px;overflow:hidden;position:relative;border-color:var(--cyan)!important}.admin-hero:before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 20px,rgba(49,245,255,.05) 20px 22px),repeating-linear-gradient(0deg,transparent 0 18px,rgba(255,62,181,.04) 18px 20px);pointer-events:none}.admin-hero>*{position:relative}.admin-hero h3{font-size:clamp(13px,2vw,18px);margin:5px 0 10px}.admin-hero p{margin:0;color:var(--muted);line-height:1.65}.admin-orb{width:82px;height:82px;display:grid;place-items:center;border:3px solid var(--yellow);background:radial-gradient(circle,#241851,#08061d);box-shadow:0 0 22px rgba(255,232,76,.28),5px 5px #050312;font:32px 'Press Start 2P'}.admin-warning{border-color:var(--yellow)!important}.admin-warning p{color:var(--muted)}.admin-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}.admin-grid article{background:#100b2d;border:2px solid #3c2f72;padding:14px;text-align:center}.admin-grid span{display:block;font:18px 'Press Start 2P';color:var(--cyan);margin-bottom:8px}.admin-grid b{display:block;color:var(--yellow);font:10px/1.5 'Press Start 2P'}.admin-grid small{display:block;color:var(--muted);margin-top:7px}.admin-actions{display:flex;flex-wrap:wrap;gap:10px}.admin-actions .pixel-btn{font-size:8px}.admin-action-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}.admin-action-grid article{display:grid;grid-template-columns:48px 1fr;gap:12px;align-items:center;background:#100b2d;border:2px solid #3c2f72;padding:13px;box-shadow:4px 4px #050312}.admin-action-grid article>span{display:grid;place-items:center;min-height:44px;background:#08061d;border:2px solid #44367c;color:var(--cyan);font:14px 'Press Start 2P'}.admin-action-grid b,.admin-action-grid small{display:block}.admin-action-grid b{font:9px/1.45 'Press Start 2P';color:var(--yellow)}.admin-action-grid small{color:var(--muted);font-size:11px;margin-top:5px}.admin-action-grid .pixel-btn{grid-column:1/-1;font-size:8px;padding:10px}.admin-action-grid .danger-card{border-color:var(--pink)}
 @media(max-width:600px){.drive-controls.v2{grid-template-columns:repeat(6,43px);gap:4px}.drive-controls.v2 button{font-size:11px;padding:0}}
+
+/* VOID MINER */
+.vm-title,.vm-base,.vm-codex,.vm-report{width:min(920px,100%);margin:auto}.vm-title{padding:30px;border:3px solid #8f48d8;background:radial-gradient(circle at 50% 25%,#301545,#090611 58%);box-shadow:inset 0 0 70px #000,0 0 28px #b56cff33}.vm-title-mark{font-size:82px;filter:drop-shadow(0 0 18px #b56cff)}.vm-title>h3{font-size:clamp(24px,5vw,48px);letter-spacing:.11em;margin:8px;color:#f2e5ff}.vm-title>p{color:#afa4bd}.vm-records,.vm-report-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:20px 0}.vm-records span,.vm-report-grid span{display:grid;gap:7px;padding:11px;background:#080612;border:1px solid #4c3263;color:#9f91b2;font:7px/1.4 'Press Start 2P',monospace}.vm-records b,.vm-report-grid b{color:#31f5ff}.vm-base>header,.vm-codex>header{display:flex;justify-content:space-between;align-items:center;text-align:left;padding:14px;border:3px solid #7440a7;background:#110a1c}.vm-base>header h3,.vm-codex>header h3{margin:5px 0}.vm-base>header strong,.vm-codex>header strong{color:#ffe84c;font:10px 'Press Start 2P'}.vm-upgrade-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:14px 0}.vm-upgrade-grid article{display:grid;grid-template-columns:48px 1fr auto;align-items:center;gap:11px;padding:12px;text-align:left;border:2px solid #39264e;background:#0b0712}.vm-upgrade-grid article>i{font-size:30px;color:#b56cff;font-style:normal}.vm-upgrade-grid b{font:8px/1.5 'Press Start 2P';color:#31f5ff}.vm-upgrade-grid p{font-size:11px;margin:6px 0;color:#aaa0b2}.vm-upgrade-grid small{font-size:9px;color:#ffe84c}.vm-upgrade-grid button{padding:11px;border:2px solid #b56cff;background:#21102f;color:#fff;font:7px 'Press Start 2P';cursor:pointer}.vm-upgrade-grid button:disabled{opacity:.38}.vm-codex{text-align:left}.vm-codex>div{margin:14px 0;padding:12px;border:2px solid #3e2855;background:#090611}.vm-codex h4{font:9px 'Press Start 2P';color:#ffe84c}.vm-codex>div>section{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:7px}.vm-codex article{padding:10px;border:1px solid #49345e;background:#100a1a;min-height:86px}.vm-codex article i{float:left;font-style:normal;font-size:24px;margin-right:9px;color:#b56cff}.vm-codex article b{font:7px/1.5 'Press Start 2P';color:#31f5ff}.vm-codex article p{font-size:10px;color:#a99bb1}.vm-codex article.unknown{filter:grayscale(1);opacity:.42}.vm-run{width:min(1000px,100%);margin:auto}.vm-hud{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-bottom:7px}.vm-hud>span{display:grid;gap:4px;padding:7px;background:#080612;border:1px solid #4b3560;color:#998ba8;font:6px 'Press Start 2P';text-align:left}.vm-hud b{color:#f5edff;font-size:8px}.vm-hud small{color:#b56cff;white-space:nowrap;overflow:hidden}.vm-hud i{height:5px;border:1px solid #554567;background:#020105}.vm-hud u{display:block;width:100%;height:100%;background:linear-gradient(90deg,#ff3e65,#ffe84c,#72ff77);text-decoration:none}.vm-canvas-wrap{position:relative;border:4px solid #7440a7;background:#050208;box-shadow:0 0 30px #b56cff35;overflow:hidden}.vm-canvas-wrap canvas{display:block;width:100%;height:auto;aspect-ratio:30/19;image-rendering:pixelated;touch-action:none}.vm-event{position:absolute;left:50%;top:11%;transform:translate(-50%,-12px);opacity:0;padding:10px 16px;border:2px solid #ffe84c;background:#090611e8;color:#ffe84c;font:8px 'Press Start 2P';pointer-events:none;transition:.2s}.vm-event.show{opacity:1;transform:translate(-50%,0)}.vm-prompt{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);min-width:220px;color:#fff;background:#090611d8;border-left:3px solid #31f5ff;padding:8px;font:7px 'Press Start 2P';pointer-events:none}.vm-run footer{display:flex;justify-content:space-between;gap:10px;align-items:center}.vm-run footer>p{font-size:9px;color:#857a91}.vm-inventory{display:flex;gap:5px;overflow-x:auto;padding:7px 0;min-height:44px;max-width:70%}.vm-inventory button{display:flex;align-items:center;gap:5px;flex:0 0 auto;padding:7px;border:1px solid var(--ore);background:#0a0711;color:#fff;font-size:9px;cursor:pointer}.vm-inventory button i{width:8px;height:8px;background:var(--ore);box-shadow:0 0 7px var(--ore)}.vm-inventory button b{font-size:8px}.vm-inventory small{color:#81778a}.vm-report{padding:24px;border:3px solid #7440a7;background:#090611}.vm-report.success{box-shadow:inset 0 0 45px #31f5ff1c}.vm-report.failed{box-shadow:inset 0 0 45px #ff3e651c}.vm-haul{display:flex;justify-content:center;flex-wrap:wrap;gap:7px;margin:15px}.vm-haul span{border-left:4px solid var(--ore);background:#110a1a;padding:8px;color:#bbb0c4;font-size:10px}.vm-haul b{margin-left:8px;color:var(--ore)}
+.game-dialog:has(.vm-run),.game-dialog:has(.vm-base),.game-dialog:has(.vm-codex){width:min(1120px,calc(100% - 18px))}.game-dialog:has(.vm-run) .game-stage,.game-dialog:has(.vm-base) .game-stage,.game-dialog:has(.vm-codex) .game-stage{padding:12px;align-content:start}.mobile-mode body[data-mobile-profile="twinStick"] .vm-run footer{padding-bottom:2px}
+@media(max-width:700px){.vm-records,.vm-report-grid{grid-template-columns:1fr 1fr}.vm-upgrade-grid{grid-template-columns:1fr}.vm-hud{grid-template-columns:repeat(3,1fr)}.vm-hud>span:nth-child(5){grid-column:2/4}.vm-run footer{display:block}.vm-inventory{max-width:100%}.vm-run footer>p{display:none}.vm-title{padding:16px}.vm-codex>div>section{grid-template-columns:1fr 1fr}}
+@media(max-height:650px) and (orientation:landscape){.vm-hud{margin-bottom:3px}.vm-hud>span{padding:4px}.vm-canvas-wrap canvas{max-height:calc(100vh - 205px);object-fit:contain}.vm-inventory{min-height:32px;padding:3px}.vm-title-mark{font-size:55px}.vm-title{padding:12px}.vm-title .game-actions{margin:10px}}
 @media(max-width:900px){.game-life{display:none}.shop-dialog .shop-grid{grid-template-columns:1fr}}
 
 /* Egyedi tétek és arcade kommentátor */
@@ -635,6 +641,63 @@ button,.pixel-btn,.play-btn,.filter,.shop-btn,.game-card,.spot-card,.challenge-c
 .menu-life-bg{transition:opacity var(--duration-normal) var(--ease-out),filter var(--duration-normal) var(--ease-out)}
 @media(max-width:920px){.hero-playground{grid-template-columns:repeat(4,minmax(0,1fr))}}
 @media(max-width:620px){.hero-playground{grid-template-columns:repeat(2,minmax(0,1fr));padding-top:16px}.hero-playground:before{font-size:6px}}
+
+/* Legibility pass: pixel fonts need a larger practical floor than body copy. */
+.eyebrow{font-size:11px;line-height:1.8}
+.pixel-btn{font-size:11px;line-height:1.6}
+.game-dialog.font-normal{--font-scale:1.12}
+.game-dialog.font-large{--font-scale:1.34}
+.game-dialog.font-huge{--font-scale:1.58}
+.game-dialog .game-stage p,.game-dialog .result,.game-dialog .game-score,.game-dialog .choice-btn,.game-dialog .pixel-btn,.game-dialog .wager-box,.game-dialog .wager-input,.game-dialog .wager-set,.game-dialog .bet-chip{font-size:calc(14px * var(--font-scale))!important}
+.game-dialog .game-stage small,.game-dialog .game-stage label,.game-dialog .game-stage legend,.game-dialog .game-stage em{font-size:calc(12px * var(--font-scale))!important}
+.game-wallet,.cabinet-label{font-size:10px}
+.game-search,.game-sort,.filter{font-size:10px!important}
+.game-group>header small,.game-group>header>span,.game-badge,.attract-strip span{font-size:9px!important}
+.player-chip small{font-size:11px;line-height:1.5}
+.save-note,footer{font-size:12px}
+
+/* Void Miner: HUD, cards and extraction data should read at desktop distance. */
+.vm-records span,.vm-report-grid span{gap:9px;padding:14px 12px;font-size:11px;line-height:1.65}
+.vm-records b,.vm-report-grid b{font-size:13px;line-height:1.45}
+.vm-base>header strong,.vm-codex>header strong{font-size:12px}
+.vm-upgrade-grid b{font-size:10px;line-height:1.65}
+.vm-upgrade-grid p{font-size:13px;line-height:1.6}
+.vm-upgrade-grid small{font-size:11px}
+.vm-upgrade-grid button{font-size:10px}
+.vm-codex h4{font-size:11px}
+.vm-codex article b{font-size:10px;line-height:1.65}
+.vm-codex article p{font-size:12px;line-height:1.6}
+.vm-hud>span{gap:6px;padding:10px 9px;font-size:9px;line-height:1.45}
+.vm-hud b{font-size:12px}
+.vm-hud small{font-size:9px;line-height:1.5}
+.vm-hud i{height:7px}
+.vm-event{font-size:11px;line-height:1.6}
+.vm-prompt{font-size:10px;line-height:1.6;padding:10px 12px;min-width:260px}
+.vm-run footer>p{font-size:11px}
+.vm-inventory{min-height:50px}
+.vm-inventory button{font-size:11px;padding:9px}
+.vm-inventory button b{font-size:10px}
+.vm-haul span{font-size:12px;line-height:1.6;padding:10px}
+.vm-report{padding:32px}
+.vm-report .eyebrow{font-size:12px}
+.vm-report-grid{gap:10px;margin:24px 0}
+.vm-report>p{font-size:15px;line-height:1.75}
+.vm-navigation{position:absolute;z-index:6;right:12px;top:12px;width:154px;padding:7px;border:2px solid #31f5ff;background:#05030de8;box-shadow:5px 5px 0 #020108,0 0 18px #31f5ff24;pointer-events:none;backdrop-filter:blur(3px)}
+.vm-navigation canvas{display:block;width:100%;height:116px!important;aspect-ratio:auto!important;border:1px solid #3e5570;background:#05030c;image-rendering:pixelated}
+.vm-navigation b{display:block;margin-top:7px;color:#ffe84c;font:9px/1.55 'Press Start 2P';text-align:center;text-shadow:0 0 9px #ffe84c55}
+
+@media(max-width:700px){
+  .vm-records span,.vm-report-grid span{font-size:10px;padding:11px 9px}
+  .vm-records b,.vm-report-grid b{font-size:12px}
+  .vm-hud>span{font-size:8px;padding:8px}
+  .vm-hud b{font-size:11px}
+  .vm-report{padding:20px}
+  .vm-report>p{font-size:13px}
+  .vm-prompt{font-size:9px;min-width:220px}
+  .vm-navigation{right:7px;top:7px;width:116px;padding:5px}
+  .vm-navigation canvas{height:82px!important}
+  .vm-navigation b{font-size:7px;margin-top:4px}
+}
 /* Background style selector: theme chips + visible menu atmosphere */
 .hero-bg-console{
   display:grid;
@@ -1064,6 +1127,33 @@ body[data-graphics="low"]{--particle-density:.15}body[data-graphics="medium"]{--
   .driving-actions .gas{min-height:calc(min(15vh,64px) * 2 + 10px)}.driving-actions .interact{bottom:calc(min(30vh,128px) + 18px)}
 }
 
+/* Desktop-wide microcopy floor for panels that historically used 6–9px text. */
+@media(min-width:701px){
+  .settings-grid label,.quiz-config label,.boot-checks,.network-status,
+  .battle-pass-progress>div,.pass-tier header,.pass-reward>small,.pass-reward>button,
+  .dynamic-layout-badge,.card-lounge-rules span,.lounge-profile small,
+  .poker-paytable span,.credit-select small,.hold-labels span,
+  .salvage-bay-head small,.salvage-loadout>div>small,.salvage-unlocks small,
+  .salvage-career-strip span,.salvage-choice-row b,.salvage-unlocks b,
+  .salvage-unlocks button em,.salvage-skins b,.salvage-skins span,
+  .salvager-hud small,.salvager-hud b,.salvager-hud span,
+  .salvager-room-head span,.salvager-room-head em,.salvage-interact,
+  .salvage-decision>small,.salvage-decision button b,.salvager-help,
+  .salvage-atmosphere span,.salvage-atmosphere b,.salvage-log small,
+  .salvage-route-panel small,.salvage-route-panel [data-route] i,
+  .salvage-route-panel [data-route] b,.salvage-boss-warning small,
+  .salvage-boss-warning>b,.salvage-report>small,.salvage-report-grid span{
+    font-size:11px!important;
+    line-height:1.55!important;
+  }
+  .lounge-profile b,.blackjack-hand header,.casino-bet-panel>span,
+  .casino-bet-panel small,.dealer-zone>p{font-size:11px!important;line-height:1.55!important}
+  .settings-grid label>span:first-child{font-size:12px!important}
+  .app-info-grid small,.save-entry small,.settings-save small{font-size:12px;line-height:1.55}
+  .update-notice b{font-size:11px;line-height:1.55}
+  .update-notice small{font-size:13px;line-height:1.5}
+}
+
 /* Build 65: Neon Billiards */
 .billiards-game{width:min(1000px,100%);margin:auto}.billiards-scoreboard{display:grid;grid-template-columns:1fr minmax(190px,1.3fr) 1fr;gap:10px;align-items:stretch;margin-bottom:14px}.billiards-scoreboard article,.billiards-scoreboard>div{display:grid;place-items:center;gap:5px;padding:11px;border:2px solid #3d376c;background:#09071f}.billiards-scoreboard article{opacity:.56;transition:.2s}.billiards-scoreboard article.active{opacity:1;border-color:#2de2a6;box-shadow:0 0 18px #2de2a633}.billiards-scoreboard small{color:#8e84ad;font:7px/1.5 'Press Start 2P'}.billiards-scoreboard b{color:#fff;font:10px 'Press Start 2P'}.billiards-scoreboard span{color:#2de2a6;font:7px 'Press Start 2P'}.billiards-scoreboard strong{color:var(--yellow);font:10px/1.4 'Press Start 2P'}.billiards-table-wrap{position:relative;padding:10px;border:3px solid #2de2a6;background:#050312;box-shadow:8px 8px #03020d,0 0 25px #2de2a622}.billiards-table-wrap canvas{display:block;width:100%;height:auto;aspect-ratio:9/5;touch-action:none;cursor:crosshair;background:#0b493d}.billiards-controls{display:grid;grid-template-columns:1fr auto;gap:14px;align-items:end;margin-top:16px}.billiards-controls label{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:12px;border:2px solid #3d376c;background:#09071f}.billiards-controls label span,.billiards-controls label b{color:#fff;font:8px 'Press Start 2P'}.billiards-controls label b{min-width:42px;color:var(--yellow)}.billiards-controls input{width:100%;accent-color:#2de2a6}.billiards-controls button{min-width:145px}.billiards-help{margin:12px auto 0!important;color:#aaa1c7!important;font:9px/1.7 'Press Start 2P'!important}.billiards-report{width:min(720px,100%);margin:auto}.billiards-report .career-grid{grid-template-columns:repeat(4,1fr)}
 @media(max-width:700px){.billiards-scoreboard{grid-template-columns:1fr 1fr}.billiards-scoreboard>div{grid-column:1/-1;grid-row:2}.billiards-controls{grid-template-columns:1fr}.billiards-controls label{grid-template-columns:1fr auto}.billiards-controls label span{grid-column:1/-1}.billiards-report .career-grid{grid-template-columns:repeat(2,1fr)}}
@@ -1463,4 +1553,9 @@ body[data-graphics="low"]{--particle-density:.15}body[data-graphics="medium"]{--
   .mobile-mode .launch-option{margin:6px 0}
   .mobile-mode .launch-stats{grid-template-columns:repeat(4,minmax(0,1fr));margin:6px 0}
   .mobile-mode .launch-stats span{min-height:45px;padding:5px}
+}
+
+@media(min-width:701px){
+  .player-chip small{font-size:11px!important;line-height:1.5}
+  .player-chip em{font-size:11px!important;line-height:1.45}
 }

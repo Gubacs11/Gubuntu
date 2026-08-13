@@ -1,9 +1,9 @@
 "use strict";
 
 const APP_VERSION="1.0.0";
-const BUILD_NUMBER=109;
+const BUILD_NUMBER=121;
 const CACHE_NAME=`gubuntu-arcade-v${APP_VERSION}-build${BUILD_NUMBER}`;
-const APP_SHELL=["./","./index.html","./styles.css?v=109","./app.js?v=109","./assets/neon-salvager-weapons.png","./assets/fish-species-freshwater.png","./assets/fish-species-ocean.png","./assets/fish-species-legendary.png","./assets/fish-species-arcade.png","./assets/fish-species-bosses.png","./manifest.json","./icons/gubuntu.ico","./icons/icon-192.png","./icons/icon-512.png","./icons/icon-maskable-512.png"];
+const APP_SHELL=["./","./index.html","./styles.css?v=121","./void-miner.js?v=121","./app.js?v=121","./assets/neon-salvager-weapons.png","./assets/fish-species-freshwater.png","./assets/fish-species-ocean.png","./assets/fish-species-legendary.png","./assets/fish-species-arcade.png","./assets/fish-species-bosses.png","./manifest.json","./icons/gubuntu.ico","./icons/icon-192.png","./icons/icon-512.png","./icons/icon-maskable-512.png"];
 
 self.addEventListener("install", event => {
   event.waitUntil(

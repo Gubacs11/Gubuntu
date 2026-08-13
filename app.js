@@ -6,7 +6,7 @@ const storeKey = "gubuntu-arcade-v1";
 const backupKey = `${storeKey}-backups`;
 const saveVersion = 3;
 const APP_VERSION = "1.0.0";
-const BUILD_NUMBER = 109;
+const BUILD_NUMBER = 121;
 const avatars = ["👾", "🤖", "👻", "🦊", "🐸", "🧙", "🥷", "🦖"];
 
 const games = [
@@ -30,6 +30,7 @@ const games = [
   ,{id:"billiards", title:"Neon Billiards", category:"skill", tag:"8-BALL", icon:"🎱", color:"#2de2a6", cost:0, desc:"Valódi fizika, taktikus 8-ball szabályok és helyi kétjátékos vagy AI párbaj."}
   ,{id:"salvager", title:"Neon Salvager", category:"skill", tag:"EXTRACTION", icon:"☢", color:"#ffb547", cost:0, desc:"Elágazó, magalapú állomástérkép, hat taktikai fegyver és többfázisú szektorfőnökök."}
   ,{id:"towerdefense", title:"Neon Grid Defense", category:"skill", tag:"TOWER DEFENSE", icon:"🏰", color:"#31f5ff", cost:0, desc:"Építs specializálható tornyokat, használj aktív képességeket, és védd meg a neon magot 15 módosított hullámon át."}
+  ,{id:"voidminer", title:"VOID MINER", category:"skill", tag:"EXTRACTION ROGUELITE", icon:"⛏️", color:"#b56cff", cost:0, desc:"Descend. Extract. Don't get greedy. Mine a procedural abyss, then make it back with the haul."}
 ];
 
 const shopItems = [
@@ -114,7 +115,11 @@ achievements.push(
   {id:"starfarer-25",icon:"🌌",name:"MÉLYŰRI KUTATÓ",desc:"Fedezz fel 25 bolygót.",reward:160,test:p=>(p.starfarer?.atlas?.length||0)>=25},
   {id:"starfarer-50",icon:"🚀",name:"GALAKTIKUS KRÓNIKÁS",desc:"Fedezz fel 50 bolygót.",reward:300,test:p=>(p.starfarer?.atlas?.length||0)>=50},
   {id:"openroad-all",icon:"🏁",name:"MINDEN ÚT BEJÁRVA",desc:"Teljesítsd mind a 11 biomküldetést.",reward:220,test:p=>Object.values(p.openRoadMissions||{}).filter(Boolean).length>=11},
-  {id:"fishing-legend",icon:"🐉",name:"LEGENDÁS FOGÁS",desc:"Fogj legalább 1000 érme értékű halat.",reward:140,test:p=>(p.fishing?.bestValue||0)>=1000}
+  {id:"fishing-legend",icon:"🐉",name:"LEGENDÁS FOGÁS",desc:"Fogj legalább 1000 érme értékű halat.",reward:140,test:p=>(p.fishing?.bestValue||0)>=1000},
+  {id:"void-miner-100",icon:"⛏️",name:"DIGGY DIGGY",desc:"Mine 100 blocks in VOID MINER.",reward:80,test:p=>(p.voidMiner?.stats?.blocksMined||0)>=100},
+  {id:"void-miner-250",icon:"⬇️",name:"GOING DEEP",desc:"Reach 250 m in VOID MINER.",reward:100,test:p=>(p.voidMiner?.stats?.deepestDepth||0)>=250},
+  {id:"void-miner-void",icon:"◉",name:"WHAT COULD GO WRONG?",desc:"Reach THE VOID below 700 m.",reward:180,test:p=>(p.voidMiner?.stats?.deepestDepth||0)>=700},
+  {id:"void-miner-greed",icon:"📦",name:"GREED",desc:"Extract with a completely full cargo hold.",reward:120,test:p=>(p.voidMiner?.stats?.fullCargoExtractions||0)>=1}
 );
 
 const quizEasy = [
@@ -274,10 +279,11 @@ let gamePauseOpen=false;
 
 // Capability-based device detection; manual choices always win.
 const DEVICE_MODES=new Set(["auto","desktop","mobile"]);
-const landscapeMobileGames=new Set(["openroad","salvager","starfarer","billiards"]);
+const landscapeMobileGames=new Set(["openroad","salvager","starfarer","billiards","voidminer"]);
 const mobileControlProfiles={
   openroad:{layout:"driving",labels:{action:"E",boost:"BOOST",brake:"BRAKE",gas:"GAS"}},
   salvager:{layout:"twinStick",labels:{action:"FIRE",action2:"DASH",interact:"USE"}},
+  voidminer:{layout:"twinStick",labels:{action:"MINE",action2:"DASH",interact:"USE"}},
   snake:{layout:"dpad"},pac:{layout:"dpad"},fishing:{layout:"simple",labels:{action:"ACTION"}},
   reaction:{layout:"simple",labels:{action:"GO"}},towerdefense:{layout:"direct"},penalty:{layout:"direct"},
   billiards:{layout:"direct"},starfarer:{layout:"direct"},memory:{layout:"direct"},ttt:{layout:"direct"},
@@ -293,7 +299,9 @@ const resolvedGraphicsProfile=()=>{const chosen=uiSettings.graphicsProfile||"aut
 function haptic(pattern=8){if(isMobileMode()&&uiSettings.vibration!==false&&navigator.vibrate)navigator.vibrate(pattern);}
 function applyDeviceMode(){const mode=effectiveDeviceMode(),graphics=resolvedGraphicsProfile(),changed=mode!==appliedDeviceMode;document.body.dataset.deviceMode=mode;document.body.dataset.graphics=graphics;document.documentElement.classList.toggle("mobile-mode",mode==="mobile");document.documentElement.classList.toggle("desktop-mode",mode==="desktop");if(changed){releaseMobileInput();appliedDeviceMode=mode;mountedMobileControlKey="";syncMobileGameControls(activeGame);}else syncOrientationOverlay(activeGame);}
 function setDeviceMode(mode,{closeSelector=true}={}){if(!DEVICE_MODES.has(mode))return;releaseMobileInput();uiSettings.deviceMode=mode;saveUiSettings();applyDeviceMode();renderSettings();if(closeSelector&&$("#device-dialog")?.open)$("#device-dialog").close();toast(`${effectiveDeviceMode().toUpperCase()} CONTROL MODE ACTIVE`);}
-function showDeviceSelectorIfNeeded(){if(selectedDeviceMode())return;const dialog=$("#device-dialog");if(dialog&&!dialog.open)openDialogAnimated(dialog);}
+// Ask at every app start. A saved choice is retained after selection, but it
+// must not silently prevent the player from switching devices on next launch.
+function showDeviceSelectorIfNeeded(){const dialog=$("#device-dialog");if(dialog&&!dialog.open)openDialogAnimated(dialog);}
 
 // Shared normalized input. Touch emits the keyboard actions legacy games already consume.
 const actionKeys={up:"w",down:"s",left:"a",right:"d",action:" ",action2:"Shift",fire:" ",interact:"e",boost:"Shift",brake:"s",pause:"Escape"};
@@ -493,6 +501,15 @@ function normalizePlayer(p,index=0){
   p.salvager.bossKillsByType=p.salvager.bossKillsByType&&typeof p.salvager.bossKillsByType==="object"?p.salvager.bossKillsByType:{};
   ["mira","colossus","stalker"].forEach(key=>p.salvager.bossKillsByType[key]=Math.max(0,Math.floor(Number(p.salvager.bossKillsByType[key])||0)));
   p.salvager.fastestBossKill=Math.max(0,Number(p.salvager.fastestBossKill)||0);p.salvager.noDamageBossKills=Math.max(0,Math.floor(Number(p.salvager.noDamageBossKills)||0));
+  p.voidMiner=p.voidMiner&&typeof p.voidMiner==="object"?p.voidMiner:{};
+  p.voidMiner.credits=Math.max(0,Math.floor(Number(p.voidMiner.credits)||0));
+  p.voidMiner.upgrades=p.voidMiner.upgrades&&typeof p.voidMiner.upgrades==="object"?p.voidMiner.upgrades:{};
+  ["drill","battery","cargo","suit","light","scanner","mobility"].forEach(key=>p.voidMiner.upgrades[key]=Math.max(0,Math.min(4,Math.floor(Number(p.voidMiner.upgrades[key])||0))));
+  p.voidMiner.stats=p.voidMiner.stats&&typeof p.voidMiner.stats==="object"?p.voidMiner.stats:{};
+  ["runs","extractions","failedRuns","deepestDepth","totalValue","blocksMined","artifactsFound","fullCargoExtractions"].forEach(key=>p.voidMiner.stats[key]=Math.max(0,Math.floor(Number(p.voidMiner.stats[key])||0)));
+  p.voidMiner.discoveries=p.voidMiner.discoveries&&typeof p.voidMiner.discoveries==="object"?p.voidMiner.discoveries:{};
+  ["resources","creatures","zones","artifacts","rooms","logs"].forEach(key=>p.voidMiner.discoveries[key]=[...new Set(Array.isArray(p.voidMiner.discoveries[key])?p.voidMiner.discoveries[key].filter(value=>typeof value==="string"):[])]);
+  p.voidMiner.artifacts=[...new Set(Array.isArray(p.voidMiner.artifacts)?p.voidMiner.artifacts.filter(value=>typeof value==="string"):[])];
   p.subscription=p.subscription&&typeof p.subscription==="object"?p.subscription:{};
   p.subscription.plan=p.subscription.plan==="premium"?"premium":"free";
   p.subscription.status=p.subscription.plan==="premium"&&p.subscription.status!=="cancelled"?"active":p.subscription.status==="cancelled"?"cancelled":"free";
@@ -1028,14 +1045,15 @@ function starfarerStatusReport(){
   return `<section class="sf-status-report"><header><span>▣</span><div><small>GSA-01 STATUS REPORT</small><b>${ambientSystemLine()}</b></div></header><ul>${shuffle(lines).slice(0,4).map(x=>`<li>${esc(x)}</li>`).join("")}</ul></section>`;
 }
 const menuTiers=[
-  {id:"flagship",label:"FLAGSHIP WORLDS",title:"NAGY KALANDOK",desc:"A Gubuntu legmélyebb, legtöbb tartalommal bíró játékai.",ids:["salvager","starfarer","openroad","fishing"]},
+  {id:"flagship",label:"FLAGSHIP WORLDS",title:"NAGY KALANDOK",desc:"A Gubuntu legmélyebb, legtöbb tartalommal bíró játékai.",ids:["voidminer","salvager","starfarer","openroad","fishing"]},
   {id:"arcade",label:"ARCADE SELECT",title:"KIEMELT JÁTÉKOK",desc:"Erős, újrajátszható arcade élmények.",ids:["towerdefense","billiards","wreck","snake","pac","penalty","memory"]},
   {id:"quick",label:"QUICK COIN",title:"GYORS MENETEK",desc:"Rövid kihívások egy újabb rekordért.",ids:["quiz","reaction","guess","ttt"]},
   {id:"lounge",label:"LUCK LOUNGE",title:"KÁRTYA ÉS SZERENCSE",desc:"Tét, döntés és neon szerencse.",ids:["blackjack","poker","slots","dice","rps"]}
 ];
-const libraryGenres={salvager:"strategy",towerdefense:"strategy",billiards:"strategy",starfarer:"strategy",blackjack:"card",poker:"card",guess:"puzzle",quiz:"puzzle",memory:"puzzle",ttt:"puzzle",snake:"arcade",pac:"arcade",wreck:"arcade",reaction:"arcade",penalty:"arcade",openroad:"arcade",fishing:"arcade",rps:"arcade",slots:"arcade",dice:"arcade"};
-const recentlyUpgraded=new Set(["salvager","billiards","guess","rps","slots","snake","pac","quiz","memory","reaction","ttt","towerdefense"]);
+const libraryGenres={voidminer:"strategy",salvager:"strategy",towerdefense:"strategy",billiards:"strategy",starfarer:"strategy",blackjack:"card",poker:"card",guess:"puzzle",quiz:"puzzle",memory:"puzzle",ttt:"puzzle",snake:"arcade",pac:"arcade",wreck:"arcade",reaction:"arcade",penalty:"arcade",openroad:"arcade",fishing:"arcade",rps:"arcade",slots:"arcade",dice:"arcade"};
+const recentlyUpgraded=new Set(["voidminer","salvager","billiards","guess","rps","slots","snake","pac","quiz","memory","reaction","ttt","towerdefense"]);
 const launchCatalog={
+  voidminer:{modes:[["standard","STANDARD DESCENT"],["daily","DAILY SEED"]],difficulties:[["normal","MINER FRIENDLY"],["hard","VOID HUNGRY"]],controls:"WASD / ARROWS • MOUSE AIM • LMB / SPACE MINE • E EXTRACT / USE • SHIFT DASH",length:"8–20 MIN"},
   salvager:{modes:[["standard","STANDARD CONTRACT"],["nightmare","NIGHTMARE CONTRACT"]],difficulties:[["normal","SALVAGE RUN"],["hard","HOSTILE STATION"]],controls:"WASD / ARROWS • MOUSE / CLICK • SPACE FIRE • SHIFT DASH • E INTERACT",length:"5–10 MIN"},
   snake:{modes:[["classic","CLASSIC"],["survival","SURVIVAL"],["time","TIME ATTACK"]],controls:"WASD / ARROW KEYS / TOUCH PAD",length:"3–10 MIN"},
   memory:{difficulties:[["easy","EASY"],["normal","NORMAL"],["hard","HARD"]],controls:"MOUSE / TOUCH",length:"4–8 MIN"},
@@ -1066,7 +1084,7 @@ function renderLobby(){
   $("#lobby-spotlight").innerHTML=`<section class="arcade-newswire"><header><span>● LIVE</span><b>GUBUNTU NEWSWIRE</b></header>${news.map((n,i)=>`<button data-game="${n.game}" style="--delay:${i}"><span>${n.icon}</span><div><small>${n.label}</small><b>${esc(n.text)}</b></div></button>`).join("")}</section><section class="ambient-ad"><small>${ad.label}</small><p>„${esc(ad.text)}”</p></section>${playerLogHtml()}${capitalHtml}${lastHtml}<button class="spot-card featured-card" data-game="${featured.id}" style="--accent:${featured.color}"><span>${featured.icon}</span><div><small>MAI AJÁNLAT</small><b>${featured.title}</b><em>${featured.tag} • ${featured.cost?featured.cost+" ●":"INGYEN"}</em></div></button>`;
 }
 function menuAttract(g,plays,winRate){
-  const vibe={starfarer:"NAV CORE",openroad:"ENGINE HOT",fishing:"MOON SIGNAL",wreck:"DAMAGE ALERT",slots:"JACKPOT HUM",blackjack:"DEALER READY",poker:"HOLD/DRAW",snake:"CARTRIDGE OK",pac:"MAZE LIVE",penalty:"GOAL CAM",memory:"MATCH GRID",reaction:"TURBO LAMP",quiz:"BRAIN TEST",guess:"LOGIC LOCK",ttt:"GRID DUEL",dice:"DICE LAB",rps:"DUEL SYNC"}[g.id]||"CABINET LIVE";
+  const vibe={voidminer:"VOID SIGNAL",starfarer:"NAV CORE",openroad:"ENGINE HOT",fishing:"MOON SIGNAL",wreck:"DAMAGE ALERT",slots:"JACKPOT HUM",blackjack:"DEALER READY",poker:"HOLD/DRAW",snake:"CARTRIDGE OK",pac:"MAZE LIVE",penalty:"GOAL CAM",memory:"MATCH GRID",reaction:"TURBO LAMP",quiz:"BRAIN TEST",guess:"LOGIC LOCK",ttt:"GRID DUEL",dice:"DICE LAB",rps:"DUEL SYNC"}[g.id]||"CABINET LIVE";
   const pulse=plays?`${plays} RUN • ${winRate}% WIN`:(g.cost?`${g.cost} COIN ENTRY`:"FREE PLAY");
   return `<div class="attract-strip"><span>${vibe}</span><i>${pulse}</i></div>`;
 }
@@ -1125,7 +1143,7 @@ function openGame(id,quick=false){
 }
 function launchGame(id,restart=false){
   const game=games.find(g=>g.id===id);if(!game||!currentPlayer)return;if(!restart&&currentPlayer.coins<game.cost)return toast("NINCS ELÉG ÉRMÉD!");runActiveGameCleanup();resetGameViewport();setMenuPaused(true);launchScreenOpen=false;gamePauseOpen=false;$("#game-pause-overlay").hidden=true;$("#game-pause-button").hidden=false;if(!restart)currentPlayer.coins-=game.cost;const now=new Date().toISOString(),stats=currentPlayer.gameStats[id]||={plays:0,wins:0,losses:0,draws:0,best:null};stats.lastPlayedAt=now;currentPlayer.gameStats[id]=stats;currentPlayer.lastGame=id;currentPlayer.lastPlayedAt=now;saveData();updateHud();renderLobby();activeGame=id;gameStartedAt=Date.now();sfx("coin");startGameLife(game);
-  const prefs=launchPrefs(id),launchOptions={mode:prefs.mode,difficulty:prefs.difficulty,theme:prefs.theme},starters={guess:startGuess,rps:startRps,quiz:startQuiz,penalty:startPenalty,slots:startSlots,dice:startDice,memory:startMemory,reaction:startReaction,ttt:startTtt,snake:startSnake,pac:startPac,billiards:startBilliards,salvager:startNeonSalvager,wreck:startWreck,towerdefense:options=>{startTowerDefense();const select=$("#td-mode-select");if(select&&[...select.options].some(option=>option.value===options.mode&&!option.disabled))select.value=options.mode},fishing:startFishing,openroad:startOpenRoadV2,starfarer:startStarfarer,blackjack:startBlackjack,poker:startPoker},starter=starters[id];const [bootLine,punchLine]=bootFlavor(game);bootSfx(id);setStage(`<section class="game-boot-intro boot-${id}" style="--accent:${game.color}"><span>${game.icon}</span><small>${game.tag} CABINET BOOT</small><h3>${esc(game.title)}</h3><p><b>${esc(bootLine)}</b><em>${esc(punchLine)}</em></p><i></i></section>`);resetGameViewport();const bootTimer=setTimeout(()=>{starter?.(launchOptions);resetGameViewport();requestAnimationFrame(()=>{resetGameViewport();syncMobileGameControls(id);});},1450);setActiveCleanup(()=>{clearTimeout(bootTimer);releaseMobileInput();syncMobileGameControls(null);});
+  const prefs=launchPrefs(id),launchOptions={mode:prefs.mode,difficulty:prefs.difficulty,theme:prefs.theme},starters={voidminer:startVoidMiner,guess:startGuess,rps:startRps,quiz:startQuiz,penalty:startPenalty,slots:startSlots,dice:startDice,memory:startMemory,reaction:startReaction,ttt:startTtt,snake:startSnake,pac:startPac,billiards:startBilliards,salvager:startNeonSalvager,wreck:startWreck,towerdefense:options=>{startTowerDefense();const select=$("#td-mode-select");if(select&&[...select.options].some(option=>option.value===options.mode&&!option.disabled))select.value=options.mode},fishing:startFishing,openroad:startOpenRoadV2,starfarer:startStarfarer,blackjack:startBlackjack,poker:startPoker},starter=starters[id];const [bootLine,punchLine]=bootFlavor(game);bootSfx(id);setStage(`<section class="game-boot-intro boot-${id}" style="--accent:${game.color}"><span>${game.icon}</span><small>${game.tag} CABINET BOOT</small><h3>${esc(game.title)}</h3><p><b>${esc(bootLine)}</b><em>${esc(punchLine)}</em></p><i></i></section>`);resetGameViewport();const bootTimer=setTimeout(()=>{starter?.(launchOptions);resetGameViewport();requestAnimationFrame(()=>{resetGameViewport();syncMobileGameControls(id);});},1450);setActiveCleanup(()=>{clearTimeout(bootTimer);releaseMobileInput();syncMobileGameControls(null);});
 }
 function setGamePause(paused){if(!activeGame)return;gamePauseOpen=paused;const overlay=$("#game-pause-overlay"),dialog=$("#game-dialog");overlay.hidden=!paused;dialog.classList.toggle("is-paused",paused);const tdPause=$("#td-pause");if(tdPause&&((paused&&tdPause.textContent.includes("PAUSE"))||(!paused&&tdPause.textContent.includes("RESUME"))))tdPause.click();if(paused){const game=games.find(g=>g.id===activeGame),config=(launchCatalog[activeGame]||launchCatalog.default);$("#pause-controls").textContent=`${game?.title||"GAME"} • ${config.controls}`}}
 function exitActiveGame(){const dialog=$("#game-dialog");runActiveGameCleanup();gamePauseOpen=false;launchScreenOpen=false;$("#game-pause-overlay").hidden=true;closeDialogAnimated(dialog);setMenuPaused(false)}
