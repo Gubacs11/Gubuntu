@@ -71,6 +71,18 @@ test("All 21 declared games map to existing, uniquely registering modules",()=>{
   }
 });
 
+test("Initial script order defines offline and shuffle globals before consumers",()=>{
+  const scripts=[...read("index.html").matchAll(/<script\s+src="([^"]+)"/g)].map(match=>match[1].split("?")[0]);
+  assert.deepEqual(scripts.slice(-5),[
+    "offline-manifest.js","games/shared-random.js","games/game-registry.js",
+    "games/card-games-shared.js","app.js"
+  ]);
+  const context=load("offline-manifest.js");
+  vm.runInContext(read("games/shared-random.js"),context,{filename:"games/shared-random.js"});
+  assert.equal(typeof context.GubuntuOfflineManifest,"object");
+  assert.equal(typeof context.shuffle,"function");
+});
+
 test("Canonical offline manifest contains every launch dependency",()=>{
   assert.ok(Number.isInteger(build)&&build>0,"app build number");
   const context=load("offline-manifest.js"),manifest=context.GubuntuOfflineManifest,assets=[...manifest.assets(build)];
@@ -100,7 +112,10 @@ test("Service worker installs and serves all game modules offline",async()=>{
     keys:async()=>[...stores.keys()],delete:async name=>stores.delete(name)
   }};
   context.self={location:{origin:"http://localhost"},clients:{claim:async()=>{}},skipWaiting:()=>{},addEventListener:(type,handler)=>{listeners[type]=handler}};
-  vm.createContext(context);vm.runInContext(read("offline-manifest.js"),context,{filename:"offline-manifest.js"});context.importScripts=()=>{};
+  vm.createContext(context);context.importScripts=source=>{
+    const file=source.replace(/^\.\//,"").split("?")[0];
+    vm.runInContext(read(file),context,{filename:file});
+  };
   vm.runInContext(read("service-worker.js"),context,{filename:"service-worker.js"});
   let installPromise;listeners.install({waitUntil:promise=>{installPromise=promise;}});await installPromise;
   const manifest=context.GubuntuOfflineManifest,cacheName=manifest.cacheName("1.0.0",build),cache=stores.get(cacheName);
