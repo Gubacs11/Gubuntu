@@ -324,7 +324,7 @@ function startNeonSalvager(launchOptions={}){
       const atmosphereEl=$("#salvage-atmosphere");if(atmosphereEl){atmosphereEl.className=`salvage-atmosphere power-${currentAtmosphere.powerState} reactor-${stage}`;atmosphereEl.querySelector("span").textContent=`POWER ${currentAtmosphere.powerState.toUpperCase()} • ${stage.toUpperCase()}`;atmosphereEl.querySelector("b").textContent=`${currentAtmosphere.hazard.replace("_"," ").toUpperCase()} • ${currentAtmosphere.ambientSound.replace("_"," ").toUpperCase()}`;}
       ctx.restore();
     }
-    function loop(now){const dt=Math.min(.034,(now-last)/1000);last=now;update(dt);draw();if(!ended)raf=requestAnimationFrame(loop)}
+    function loop(now){if(ended)return;if(document.hidden||gamePauseOpen){last=now;raf=requestAnimationFrame(loop);return}const minFrame=window.GubuntuPerf?.targetFrameInterval?.()||0;if(now-last<minFrame){raf=requestAnimationFrame(loop);return}const dt=Math.min(.034,(now-last)/1000);last=now;update(dt);draw();raf=requestAnimationFrame(loop)}
     const onKeyDown=e=>{const k=e.key.toLowerCase();if(["arrowup","arrowdown","arrowleft","arrowright"," ","shift","e"].includes(k))e.preventDefault();keys.add(k);if(k==="shift")dash();if(k==="e")interact()};
     const onKeyUp=e=>keys.delete(e.key.toLowerCase()),onMove=e=>{const r=canvas.getBoundingClientRect();mouse.x=(e.clientX-r.left)/r.width*W;mouse.y=(e.clientY-r.top)/r.height*H},onDown=e=>{if(e.button===0){shootHeld=true;shoot()}},onUp=()=>shootHeld=false;
     document.addEventListener("keydown",onKeyDown);document.addEventListener("keyup",onKeyUp);canvas.addEventListener("pointermove",onMove);canvas.addEventListener("pointerdown",onDown);window.addEventListener("pointerup",onUp);

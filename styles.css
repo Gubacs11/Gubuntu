@@ -1113,9 +1113,21 @@ html.mobile-mode body[data-mobile-profile="driving"] .game-stage{overflow:hidden
 .mobile-mode .library-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.mobile-mode .game-card{min-height:0}.mobile-mode .game-toolbar{grid-template-columns:1fr}.mobile-mode .hero-playground{grid-template-columns:repeat(2,minmax(0,1fr))}
 .mobile-mode .settings-grid,.mobile-mode .settings-presets,.mobile-mode .shop-grid,.mobile-mode .achievement-grid{grid-template-columns:1fr}
 .mobile-mode .settings-content{padding-left:max(12px,env(safe-area-inset-left))!important;padding-right:max(12px,env(safe-area-inset-right))!important;padding-bottom:max(32px,env(safe-area-inset-bottom))!important}
-body[data-graphics="low"] .crt,body[data-graphics="low"] .pixel-stars,body[data-graphics="low"] .game-life{display:none!important}
+body[data-graphics="low"] .crt,body[data-graphics="medium"] .crt,body[data-graphics="low"] .pixel-stars,body[data-graphics="low"] .game-life,body[data-graphics="medium"] .game-life,body[data-graphics="low"] .menu-life-bg{display:none!important}
 body[data-graphics="low"] *,body[data-graphics="medium"] .game-card{box-shadow:none!important;text-shadow:none!important;backdrop-filter:none!important}
+.game-card{will-change:auto}
+body[data-graphics="low"] .menu-life-bg,body[data-graphics="medium"] .menu-life-bg{filter:none!important}
+body[data-graphics="low"] .game-card:before,body[data-graphics="medium"] .game-card:before{display:none}
+body[data-graphics="low"] .art-icon,body[data-graphics="medium"] .art-icon{filter:none;animation:none}
+.library-card{content-visibility:visible;contain:none}
+body[data-graphics="low"] .arcade-screen:before,body[data-graphics="medium"] .arcade-screen:before{display:none}
+body[data-graphics="low"] .topbar,body[data-graphics="medium"] .topbar,body[data-graphics="low"] .arcade-sidebar,body[data-graphics="medium"] .arcade-sidebar,body[data-graphics="low"] .hero,body[data-graphics="medium"] .hero{backdrop-filter:none!important}
+body[data-graphics="low"] .arcade-machine,body[data-graphics="medium"] .arcade-machine{animation:none;filter:none}
+body[data-graphics="low"] .pixel-ghost,body[data-graphics="medium"] .pixel-ghost{animation:none}
 body[data-graphics="low"]{--particle-density:.15}body[data-graphics="medium"]{--particle-density:.48}
+
+/* Keep dense arcade labels readable without resizing icons or canvas artwork. */
+.game-stage .readable-micro-text{font-size:clamp(10px,calc(10px * var(--font-scale)),14px)!important;line-height:1.5!important;letter-spacing:0!important}
 
 @media(max-width:520px){
   .device-options{grid-template-columns:1fr}.device-options button:last-child{grid-column:auto}.device-options button{min-height:94px;grid-template-columns:auto 1fr;text-align:left}.device-options button span{grid-row:1/3;font-size:30px}
