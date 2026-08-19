@@ -6,7 +6,7 @@ const storeKey = "gubuntu-arcade-v1";
 const backupKey = `${storeKey}-backups`;
 const saveVersion = 3;
 const APP_VERSION = "1.0.0";
-const BUILD_NUMBER = 126;
+const BUILD_NUMBER = 127;
 const avatars = ["👾", "🤖", "👻", "🦊", "🐸", "🧙", "🥷", "🦖"];
 
 const games = [
@@ -33,7 +33,7 @@ const games = [
   ,{id:"voidminer", title:"VOID MINER", category:"skill", tag:"EXTRACTION ROGUELITE", icon:"⛏️", color:"#b56cff", cost:0, desc:"Descend. Extract. Don't get greedy. Mine a procedural abyss, then make it back with the haul."}
 ];
 
-const gameScriptPaths={guess:"guess.js",rps:"rock-paper-scissors.js",quiz:"quiz.js",penalty:"penalty.js",slots:"slots.js",dice:"dice.js",memory:"memory.js",reaction:"reaction.js",ttt:"tic-tac-toe.js",snake:"snake.js",pac:"pixel-pac.js",wreck:"wreck-it.js",fishing:"fishing.js",openroad:"open-road.js",starfarer:"starfarer.js",blackjack:"blackjack.js",poker:"poker.js",billiards:"billiards.js",salvager:"neon-salvager.js",towerdefense:"tower-defense.js",voidminer:"void-miner.js"};
+const gameScriptPaths=GubuntuOfflineManifest.gameModules;
 const gameLoadPromises=new Map();
 function ensureGameLoaded(id){
   const ready=window.GubuntuGames?.get(id);if(ready)return Promise.resolve(ready);
@@ -568,7 +568,6 @@ function saveData(){
   }catch(err){console.error("Save failed",err);toast("MENTÉS HIBA: a böngésző tárhelye nem írható");}
 }
 function esc(value){ const node=document.createElement("div"); node.textContent=value; return node.innerHTML; }
-function shuffle(array){ return [...array].sort(()=>Math.random()-.5); }
 function directionPad(){return `<div class="dpad" role="group" aria-label="Irányvezérlés"><button type="button" data-dir="up" aria-label="Fel">↑</button><button type="button" data-dir="left" aria-label="Balra">←</button><button type="button" data-dir="down" aria-label="Le">↓</button><button type="button" data-dir="right" aria-label="Jobbra">→</button></div>`;}
 function bindDirections(onDirection){
   const keyMap={ArrowUp:"up",w:"up",W:"up",ArrowDown:"down",s:"down",S:"down",ArrowLeft:"left",a:"left",A:"left",ArrowRight:"right",d:"right",D:"right"};
@@ -582,16 +581,7 @@ function toast(message){
   (topDialog||document.body).appendChild(el);el.textContent=message;el.classList.add("show");clearTimeout(toast.timer);
   toast.timer=setTimeout(()=>{el.classList.remove("show");setTimeout(()=>{if(!el.classList.contains("show"))document.body.appendChild(el);},260);},2200);
 }
-let readableTextFrame=0;
-function normalizeGameText(){
-  cancelAnimationFrame(readableTextFrame);readableTextFrame=requestAnimationFrame(()=>{
-    readableTextFrame=0;const stage=$("#game-stage");if(!stage)return;
-    stage.querySelectorAll("small,label,button,select,option,output,kbd,dt,dd,p,span,b,em,strong").forEach(el=>{
-      const size=Number.parseFloat(getComputedStyle(el).fontSize);el.classList.toggle("readable-micro-text",Number.isFinite(size)&&size<10.5);
-    });
-  });
-}
-function setStage(html){$("#game-stage").innerHTML=html;normalizeGameText();}
+function setStage(html){$("#game-stage").innerHTML=html;}
 function resetGameViewport(){
   const dialog=$("#game-dialog"),stage=$("#game-stage"),playfield=$(".game-playfield");
   [dialog,stage,playfield].forEach(element=>{if(element){element.scrollTop=0;element.scrollLeft=0;}});
@@ -1195,7 +1185,7 @@ async function registerPwa(){
   try{swRegistration=await navigator.serviceWorker.register("service-worker.js");if(swRegistration.waiting&&navigator.serviceWorker.controller)showUpdateNotice(swRegistration.waiting);swRegistration.addEventListener("updatefound",()=>{const worker=swRegistration.installing;if(!worker)return;worker.addEventListener("statechange",()=>{if(worker.state==="installed"&&navigator.serviceWorker.controller)showUpdateNotice(worker);});});await swRegistration.update().catch(()=>{});return swRegistration;}catch(err){console.warn(`PWA registration failed • v${APP_VERSION} build ${BUILD_NUMBER}`,err);return null;}
 }
 function applyPwaUpdate(){const worker=swRegistration?.waiting;if(!worker)return location.reload();sessionStorage.setItem("gubuntu-update-reload","1");worker.postMessage({type:"SKIP_WAITING"});}
-async function cacheReady(){if(!("caches" in window))return false;try{const cache=await caches.open(`gubuntu-arcade-shell-v${APP_VERSION}-build${BUILD_NUMBER}`),required=["./index.html",`./styles.css?v=${BUILD_NUMBER}`,`./games/game-registry.js?v=${BUILD_NUMBER}`,`./app.js?v=${BUILD_NUMBER}`],matches=await Promise.all(required.map(path=>cache.match(path)));return matches.every(Boolean);}catch{return false;}}
+async function cacheReady(){if(!("caches" in window)||!window.GubuntuOfflineManifest)return false;try{const cache=await caches.open(GubuntuOfflineManifest.cacheName(APP_VERSION,BUILD_NUMBER)),required=GubuntuOfflineManifest.assets(BUILD_NUMBER),matches=await Promise.all(required.map(path=>cache.match(path)));return matches.every(Boolean);}catch{return false;}}
 async function renderAppInfo(){
   if(!$("#app-info"))return;const ready=await cacheReady(),storageBytes=localStorageBytes(),installed=appInstalled||window.matchMedia?.("(display-mode: standalone)").matches,swState=swRegistration?.waiting?"FRISSÍTÉS VÁR":swRegistration?.active?.state?.toUpperCase()||("serviceWorker" in navigator?"REGISZTRÁLÁS":"NEM TÁMOGATOTT");
   const items=[["VERZIÓ",`v${APP_VERSION}`],["BUILD",BUILD_NUMBER],["MENTÉSI VERZIÓ",saveVersion],["TELEPÍTÉS",installed?"TELEPÍTVE":deferredInstallPrompt?"TELEPÍTHETŐ":"BÖNGÉSZŐBEN"],["CACHE",ready?"OFFLINE KÉSZ":"FELKÉSZÍTÉS"],["SERVICE WORKER",swState],["HÁLÓZAT",navigator.onLine?"ONLINE":"OFFLINE"],["UTOLSÓ MENTÉS",formatDate(data.savedAt)],["PROFILOK",data.profiles.length],["HELYI ADAT",formatBytes(storageBytes)]];
@@ -1241,7 +1231,6 @@ function applySettingsPreset(name){
 }
 
 function init(){
-  const gameStage=$("#game-stage");if(gameStage)new MutationObserver(normalizeGameText).observe(gameStage,{childList:true,subtree:true});
   window.addEventListener("error",e=>reportRuntimeError(e.message,e.error));
   window.addEventListener("unhandledrejection",e=>reportRuntimeError("Unhandled promise rejection",e.reason));
   window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferredInstallPrompt=e;appInstalled=false;updateInstallUi();renderAppInfo();});
