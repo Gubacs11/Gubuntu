@@ -13,7 +13,7 @@
   const assets=build=>Object.freeze([
     "./","./index.html",versioned("./styles.css",build),versioned("./offline-manifest.js",build),
     versioned("./games/shared-random.js",build),versioned("./games/game-registry.js",build),
-    versioned("./games/card-games-shared.js",build),versioned("./app.js",build),
+    versioned("./games/card-games-shared.js",build),versioned("./player-state.js",build),versioned("./app.js",build),
     ...Object.values(gameModules).map(file=>versioned(`./games/${file}`,build)),
     "./manifest.json","./icons/gubuntu.ico","./icons/icon-192.png","./icons/icon-512.png",
     "./icons/icon-maskable-512.png"

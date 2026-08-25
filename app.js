@@ -8,6 +8,7 @@ const saveVersion = 3;
 const APP_VERSION = "1.0.0";
 const BUILD_NUMBER = 127;
 const avatars = ["👾", "🤖", "👻", "🦊", "🐸", "🧙", "🥷", "🦖"];
+const {createDefaultPlayer:makeDefaultPlayer,mergeMissingDefaults,resetPlayerState}=GubuntuPlayerState;
 
 const games = [
   {id:"guess", title:"Számkitaláló", category:"skill", tag:"LOGIKA", icon:"🔢", color:"#31f5ff", cost:0, desc:"Találd meg a titkos számot minél kevesebb tippből!"},
@@ -473,6 +474,12 @@ function loadData(){
 function normalizePlayer(p,index=0){
   const fallbackId=`player-${Date.now()}-${index}`;
   p=p&&typeof p==="object"?p:{};
+  const defaults=makeDefaultPlayer({id:fallbackId,name:`Játékos ${index+1}`,seasonId:BATTLE_PASS_SEASON.id});
+  const objectProgress=["gameStats","openRoadMissions","activity","equipped","launchPrefs","tuning","openRoadGarage","openRoadJobs","tdProgress","cardLounge","fishing","salvager","voidMiner","starfarer","subscription","battlePass"];
+  const arrayProgress=["inventory","achievements","favorites","vehicles","secrets"];
+  objectProgress.forEach(key=>{if(!p[key]||typeof p[key]!=="object"||Array.isArray(p[key]))p[key]=defaults[key]});
+  arrayProgress.forEach(key=>{if(!Array.isArray(p[key]))p[key]=defaults[key]});
+  mergeMissingDefaults(p,defaults);
   p.id=safeProfileId(p.id,fallbackId);
   p.name=String(p.name||`Játékos ${index+1}`).slice(0,40);
   p.coins=Math.max(0,Math.floor(Number(p.coins)||0));
@@ -488,6 +495,13 @@ function normalizePlayer(p,index=0){
   p.gameStats=p.gameStats&&typeof p.gameStats==="object"?p.gameStats:{};
   Object.keys(p.gameStats).forEach(id=>{const s=p.gameStats[id]&&typeof p.gameStats[id]==="object"?p.gameStats[id]:{};s.plays=Math.max(0,Math.floor(Number(s.plays)||0));s.wins=Math.max(0,Math.floor(Number(s.wins)||0));s.losses=Math.max(0,Math.floor(Number(s.losses)||0));if(s.best!=null&&!Number.isFinite(Number(s.best)))delete s.best;p.gameStats[id]=s;});
   p.openRoadMissions=p.openRoadMissions&&typeof p.openRoadMissions==="object"?p.openRoadMissions:{};
+  p.vehicles=[...new Set(p.vehicles.filter(value=>typeof value==="string"))];if(!p.vehicles.includes("compact"))p.vehicles.unshift("compact");
+  p.secrets=[...new Set(p.secrets.filter(value=>typeof value==="string"))];
+  p.tuning=p.tuning&&typeof p.tuning==="object"&&!Array.isArray(p.tuning)?p.tuning:{};
+  p.openRoadGarage=p.openRoadGarage&&typeof p.openRoadGarage==="object"&&!Array.isArray(p.openRoadGarage)?p.openRoadGarage:{};
+  p.openRoadJobs=p.openRoadJobs&&typeof p.openRoadJobs==="object"&&!Array.isArray(p.openRoadJobs)?p.openRoadJobs:{};
+  p.openRoadJobs.completed=Math.max(0,Math.floor(Number(p.openRoadJobs.completed)||0));p.openRoadJobs.gold=Math.max(0,Math.floor(Number(p.openRoadJobs.gold)||0));p.openRoadJobs.bestRatings=p.openRoadJobs.bestRatings&&typeof p.openRoadJobs.bestRatings==="object"?p.openRoadJobs.bestRatings:{};
+  p.tdProgress=p.tdProgress&&typeof p.tdProgress==="object"?p.tdProgress:{};p.tdProgress.xp=Math.max(0,Number(p.tdProgress.xp)||0);p.tdProgress.level=Math.max(1,1+Math.floor(p.tdProgress.xp/180));p.tdProgress.unlockedMaps=[...new Set(["neon",...(Array.isArray(p.tdProgress.unlockedMaps)?p.tdProgress.unlockedMaps:[])])];p.tdProgress.unlockedLoadouts=[...new Set(["standard",...(Array.isArray(p.tdProgress.unlockedLoadouts)?p.tdProgress.unlockedLoadouts:[])])];p.tdProgress.completedContracts=[...new Set(Array.isArray(p.tdProgress.completedContracts)?p.tdProgress.completedContracts:[])];p.tdProgress.bestScores=p.tdProgress.bestScores&&typeof p.tdProgress.bestScores==="object"?p.tdProgress.bestScores:{};
   p.cardLounge=p.cardLounge&&typeof p.cardLounge==="object"?p.cardLounge:{};
   p.cardLounge.reputation=Math.max(0,Math.floor(Number(p.cardLounge.reputation)||0));
   p.cardLounge.level=Math.max(1,1+Math.floor(p.cardLounge.reputation/100));
@@ -508,6 +522,9 @@ function normalizePlayer(p,index=0){
   p.coinsEarned=Math.max(0,Number(p.coinsEarned)||0);
   p.activity=p.activity&&typeof p.activity==="object"?p.activity:{};
   p.equipped=p.equipped&&typeof p.equipped==="object"?p.equipped:{};
+  p.launchPrefs=p.launchPrefs&&typeof p.launchPrefs==="object"&&!Array.isArray(p.launchPrefs)?p.launchPrefs:{};
+  p.fishing=p.fishing&&typeof p.fishing==="object"?p.fishing:{};p.fishing.rod=Math.max(1,Math.min(20,Number(p.fishing.rod)||1));p.fishing.bait=Math.max(1,Math.min(20,Number(p.fishing.bait)||1));["total","sold","bestValue"].forEach(key=>p.fishing[key]=Math.max(0,Number(p.fishing[key])||0));p.fishing.bucket=Array.isArray(p.fishing.bucket)?p.fishing.bucket:[];p.fishing.dex=p.fishing.dex&&typeof p.fishing.dex==="object"?p.fishing.dex:{};p.fishing.shop=p.fishing.shop&&typeof p.fishing.shop==="object"?p.fishing.shop:{};p.fishing.area=typeof p.fishing.area==="string"?p.fishing.area:"pond";
+  p.starfarer=p.starfarer&&typeof p.starfarer==="object"?p.starfarer:{};["atlas","favorites","colonies","transmissions","eventLog","galacticNews","bridgeChoices"].forEach(key=>p.starfarer[key]=Array.isArray(p.starfarer[key])?p.starfarer[key]:[]);["upgrades","inventory","missions","codex","factions","market","living","consequence","research"].forEach(key=>p.starfarer[key]=p.starfarer[key]&&typeof p.starfarer[key]==="object"&&!Array.isArray(p.starfarer[key])?p.starfarer[key]:defaults.starfarer[key]);p.starfarer.fuel=Math.max(0,Number(p.starfarer.fuel)||0);p.starfarer.resources=Math.max(0,Number(p.starfarer.resources)||0);p.starfarer.totalScans=Math.max(0,Number(p.starfarer.totalScans)||0);p.starfarer.bestValue=Math.max(0,Number(p.starfarer.bestValue)||0);p.starfarer.sector=typeof p.starfarer.sector==="string"?p.starfarer.sector:"inner";
   p.salvager=p.salvager&&typeof p.salvager==="object"?p.salvager:{};
   p.salvager.scrap=Math.max(0,Math.floor(Number(p.salvager.scrap)||0));
   p.salvager.xp=Math.max(0,Math.floor(Number(p.salvager.xp)||0));
@@ -894,7 +911,7 @@ function importSave(file){
 }
 function resetCurrentPlayer(){
   if(!confirm(`${currentPlayer.name} minden eredménye, érméje és tárgya elvész. Biztosan nullázod?`))return;
-  Object.assign(currentPlayer,{coins:100,xp:0,plays:0,bestStreak:0,currentStreak:0,totalWins:0,totalLosses:0,rank:"ÚJONC",inventory:[],achievements:[],gameStats:{},openRoadMissions:{},tdProgress:{xp:0,level:1,unlockedMaps:["neon"],unlockedLoadouts:["standard"],completedContracts:[],bestScores:{}},daily:null,lastGame:null});
+  resetPlayerState(currentPlayer,{seasonId:BATTLE_PASS_SEASON.id,baseAvatars:avatars,baseColors:["#31f5ff","#ff3eb5","#ffe84c","#72ff77","#8e5bff"]});
   saveData();updateHud();renderGames();renderProgress();toast("PROFIL NULLÁZVA");
 }
 
@@ -954,7 +971,7 @@ function gameStatsFor(id){return currentPlayer?.gameStats?.[id]||{};}
 function menuHeadlines(){
   const sf=currentPlayer.starfarer,planet=sf?.atlas?.[0],capital=sf?.colonies?.find(c=>c.id===sf.capitalId),fish=currentPlayer.fishing,bestFish=[...(fish?.bucket||[])].sort((a,b)=>(b.kg||0)-(a.kg||0))[0],missions=Object.values(currentPlayer.openRoadMissions||{}).filter(Boolean).length;
   const headlines=[
-    {game:"starfarer",icon:capital?"♛":"🪐",label:capital?"FŐVILÁG":"GALAXIS",text:capital?`${capital.planet.name} lett a Galaktikus Birodalom fővilága, ${Math.round(capital.population).toLocaleString("hu-HU")} lakossal.`:planet?`${planet.name}: ${planet.size||"óriási"} ${planet.typeName.toLowerCase()} ${planet.life!=="Nincs"?"életjelekkel":"ritka nyersanyagokkal"}.`:"Egy pilóta óriási, életet rejtő bolygó jelét fogta a Void peremén."},
+    {game:"starfarer",icon:capital?"♛":"🪐",label:capital?"FŐVILÁG":"GALAXIS",text:capital?`${capital.planet?.name||"Ismeretlen világ"} lett a Galaktikus Birodalom fővilága, ${Math.round(Number(capital.population)||0).toLocaleString("hu-HU")} lakossal.`:planet?`${planet.name||"Ismeretlen világ"}: ${planet.size||"óriási"} ${String(planet.typeName||"ismeretlen világ").toLowerCase()} ${planet.life&&planet.life!=="Nincs"?"életjelekkel":"ritka nyersanyagokkal"}.`:"Egy pilóta óriási, életet rejtő bolygó jelét fogta a Void peremén."},
     {game:"openroad",icon:"🏎️",label:"NEON HÍREK",text:missions?`${missions} biomküldetés teljesítve: egy ismeretlen sofőr uralja az országutat.`:"Titkos alagutat találtak a Neon Open Road hegyvidékén."},
     {game:"fishing",icon:"🎣",label:"VÍZPART",text:bestFish?`${bestFish.kg?.toFixed?.(1)||bestFish.kg} kilós ${bestFish.fish?.name||"óriáshal"} akadt horogra a pixelparton.`:"Gigantikus, holdfényben világító hal mozdult a Glitch-zátonynál."},
     {game:"wreck",icon:"🔨",label:"BREAKING",text:"Új toronyrekord: a bontókalapács már a felhők fölött dolgozik."},
@@ -1277,7 +1294,7 @@ function init(){
   $("#avatar-picker").onclick=e=>{const btn=e.target.closest(".avatar-choice");if(!btn)return;$$('.avatar-choice').forEach(x=>x.classList.remove("active"));btn.classList.add("active");selectedAvatar=btn.dataset.avatar;};
   $("#new-player-btn").onclick=()=>openDialogAnimated($("#profile-dialog"));
   $("#device-dialog").onclick=e=>{const choice=e.target.closest("[data-device-choice]");if(choice)setDeviceMode(choice.dataset.deviceChoice);};
-  $("#profile-form").onsubmit=e=>{e.preventDefault();const name=$("#player-name").value.trim();if(!name)return;const colors=["#31f5ff","#ff3eb5","#ffe84c","#72ff77","#8e5bff"];const p={id:crypto.randomUUID?.()||String(Date.now()),name,avatar:selectedAvatar,color:colors[data.profiles.length%colors.length],coins:100,xp:0,plays:0,bestStreak:0,currentStreak:0,totalWins:0,totalLosses:0,rank:"ÚJONC",inventory:[],achievements:[],gameStats:{},openRoadMissions:{},daily:null,lastGame:null};data.profiles.push(p);saveData();renderProfiles();closeDialogAnimated($("#profile-dialog"));e.target.reset();selectPlayer(p.id);};
+  $("#profile-form").onsubmit=e=>{e.preventDefault();const name=$("#player-name").value.trim();if(!name)return;const colors=["#31f5ff","#ff3eb5","#ffe84c","#72ff77","#8e5bff"];const p=makeDefaultPlayer({id:crypto.randomUUID?.()||String(Date.now()),name,avatar:selectedAvatar,color:colors[data.profiles.length%colors.length],seasonId:BATTLE_PASS_SEASON.id});data.profiles.push(p);saveData();renderProfiles();closeDialogAnimated($("#profile-dialog"));e.target.reset();selectPlayer(p.id);};
   $("#profile-list").onclick=e=>{const del=e.target.closest("[data-delete]");if(del){e.stopPropagation();if(confirm("Biztosan törlöd ezt a játékosprofilt?")){data.profiles=data.profiles.filter(p=>p.id!==del.dataset.delete);saveData();renderProfiles();}return;}const card=e.target.closest("[data-id]");if(card)selectPlayer(card.dataset.id);};
   $("#change-player").onclick=()=>{if(menuLifeCleanup)menuLifeCleanup();$("#arcade-screen").classList.add("hidden");$("#player-screen").classList.remove("hidden");currentPlayer=null;renderProfiles();};
   $("#open-shop").onclick=()=>{applyShopFontSize();renderShop();openDialogAnimated($("#shop-dialog"));};

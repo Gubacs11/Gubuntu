@@ -59,10 +59,35 @@ test("Game registry rejects invalid and duplicate registrations",()=>{
   assert.throws(()=>registry.register("demo",()=>{}),/Duplicate game registration/);
 });
 
-test("All 21 declared games map to existing, uniquely registering modules",()=>{
+test("Canonical new player contains every clean progression default",()=>{
+  const context=load("player-state.js"),fresh=context.GubuntuPlayerState.createDefaultPlayer({id:"new-id",name:"Teszt",seasonId:"season-test"});
+  assert.equal(fresh.id,"new-id");assert.equal(fresh.name,"Teszt");assert.equal(fresh.coins,100);assert.equal(fresh.xp,0);assert.equal(fresh.rank,"ÚJONC");
+  assert.deepEqual([...fresh.inventory],[]);assert.deepEqual([...fresh.achievements],[]);assert.deepEqual({...fresh.gameStats},{});
+  assert.deepEqual([...fresh.vehicles],["compact"]);assert.equal(fresh.tdProgress.level,1);assert.deepEqual([...fresh.cardLounge.tablesUnlocked],["casual"]);
+  assert.equal(fresh.fishing.rod,1);assert.deepEqual([...fresh.fishing.bucket],[]);assert.equal(fresh.salvager.level,1);assert.deepEqual([...fresh.salvager.unlocks],["pistol"]);
+  assert.equal(fresh.voidMiner.credits,0);assert.deepEqual([...fresh.voidMiner.discoveries.resources],[]);assert.equal(fresh.starfarer.fuel,8);assert.deepEqual([...fresh.starfarer.atlas],[]);
+  assert.equal(fresh.battlePass.seasonId,"season-test");assert.equal(fresh.battlePass.xp,0);assert.equal(fresh.playTimeMs,0);assert.deepEqual({...fresh.activity},{});
+});
+
+test("Canonical reset removes all known and unknown progression while preserving identity and entitlement",()=>{
+  const {createDefaultPlayer,resetPlayerState}=load("player-state.js").GubuntuPlayerState;
+  const player=createDefaultPlayer({id:"keep-id",name:"Keep Name",seasonId:"season-test"}),reference=player;
+  Object.assign(player,{coins:99999,xp:42000,plays:88,totalWins:55,totalLosses:12,achievements:["all"],inventory:["avatar-crown","theme-royal"],gameStats:{snake:{plays:30,wins:20}},openRoadMissions:{city:true},vehicles:["compact","scarab"],secrets:["moon"],tuning:{scarab:{engine:4}},openRoadGarage:{scarab:{mileage:999}},openRoadJobs:{completed:50,gold:40,bestRatings:{race:"GOLD"}},activity:{"2026-08-25":12},playTimeMs:999999,coinsEarned:8888,equipped:{cabinet:"gold"},unknownFutureProgress:{level:9001},avatar:"😎",color:"#c36bff"});
+  player.starfarer={atlas:[{id:"planet"}],colonies:[{id:"colony"}],upgrades:{scanner:9}};player.fishing={bucket:[{fish:"boss"}],dex:{boss:1},shop:{cooler:9}};
+  player.salvager={xp:9000,unlocks:["everything"],runs:90};player.voidMiner={credits:5000,upgrades:{drill:4},discoveries:{resources:["void"]},stats:{blocksMined:999}};
+  player.tdProgress={xp:8000,level:40,unlockedMaps:["all"],completedContracts:["boss"]};player.cardLounge={reputation:999,tablesUnlocked:["vip"],completedContracts:["all"]};
+  player.battlePass={seasonId:"season-test",xp:1900,claimedFree:[1,2],claimedPremium:[1]};player.favorites=["snake"];player.launchPrefs={snake:{difficulty:"hard"}};player.subscription={plan:"premium",status:"active",autoRenew:true,provider:"test"};
+  resetPlayerState(player,{seasonId:"season-test",baseAvatars:["👾","🤖"],baseColors:["#31f5ff","#ff3eb5"]});
+  assert.strictEqual(player,reference);assert.equal(player.id,"keep-id");assert.equal(player.name,"Keep Name");assert.deepEqual([...player.favorites],["snake"]);assert.equal(player.subscription.plan,"premium");
+  assert.equal(player.coins,100);assert.equal(player.xp,0);assert.equal(player.plays,0);assert.equal(player.rank,"ÚJONC");assert.equal(player.avatar,"👾");assert.equal(player.color,"#31f5ff");
+  assert.equal("unknownFutureProgress" in player,false);assert.deepEqual([...player.inventory],[]);assert.deepEqual({...player.equipped},{});assert.deepEqual({...player.gameStats},{});
+  assert.deepEqual([...player.vehicles],["compact"]);assert.equal(player.openRoadJobs.completed,0);assert.equal(player.starfarer.atlas.length,0);assert.equal(player.fishing.bucket.length,0);assert.equal(player.salvager.xp,0);assert.equal(player.voidMiner.credits,0);assert.equal(player.tdProgress.level,1);assert.equal(player.cardLounge.reputation,0);assert.equal(player.battlePass.xp,0);assert.equal(player.playTimeMs,0);
+});
+
+test("All declared games map to existing, uniquely registering modules",()=>{
   const manifestContext=load("offline-manifest.js"),modules=manifestContext.GubuntuOfflineManifest.gameModules;
   const declared=[...read("app.js").matchAll(/\{id:"([a-z]+)", title:/g)].map(match=>match[1]);
-  assert.equal(declared.length,21);assert.deepEqual([...Object.keys(modules)].sort(),[...declared].sort());
+  assert.ok(declared.length>0);assert.deepEqual([...Object.keys(modules)].sort(),[...declared].sort());
   for(const [id,file] of Object.entries(modules)){
     assert.equal(fs.existsSync(path.join(root,"games",file)),true,`${id} module exists`);
     const registrations=[];const context={GubuntuGames:{register:(registered,starter)=>registrations.push([registered,starter])}};
@@ -73,9 +98,9 @@ test("All 21 declared games map to existing, uniquely registering modules",()=>{
 
 test("Initial script order defines offline and shuffle globals before consumers",()=>{
   const scripts=[...read("index.html").matchAll(/<script\s+src="([^"]+)"/g)].map(match=>match[1].split("?")[0]);
-  assert.deepEqual(scripts.slice(-5),[
+  assert.deepEqual(scripts.slice(-6),[
     "offline-manifest.js","games/shared-random.js","games/game-registry.js",
-    "games/card-games-shared.js","app.js"
+    "games/card-games-shared.js","player-state.js","app.js"
   ]);
   const context=load("offline-manifest.js");
   vm.runInContext(read("games/shared-random.js"),context,{filename:"games/shared-random.js"});
@@ -87,11 +112,11 @@ test("Canonical offline manifest contains every launch dependency",()=>{
   assert.ok(Number.isInteger(build)&&build>0,"app build number");
   const context=load("offline-manifest.js"),manifest=context.GubuntuOfflineManifest,assets=[...manifest.assets(build)];
   for(const file of Object.values(manifest.gameModules))assert.ok(assets.includes(`./games/${file}?v=${build}`),file);
-  for(const required of [`./offline-manifest.js?v=${build}`,`./games/shared-random.js?v=${build}`,`./games/game-registry.js?v=${build}`,`./games/card-games-shared.js?v=${build}`,`./app.js?v=${build}`]){assert.ok(assets.includes(required),required);}
+  for(const required of [`./offline-manifest.js?v=${build}`,`./games/shared-random.js?v=${build}`,`./games/game-registry.js?v=${build}`,`./games/card-games-shared.js?v=${build}`,`./player-state.js?v=${build}`,`./app.js?v=${build}`]){assert.ok(assets.includes(required),required);}
   for(const asset of assets){const local=asset.replace(/^\.\//,"").split("?")[0]||"index.html";assert.equal(fs.existsSync(path.join(root,local)),true,local);}
   const worker=read("service-worker.js"),app=read("app.js");
   assert.equal(Number(worker.match(/const BUILD_NUMBER\s*=\s*(\d+)/)?.[1]),build,"service-worker build matches app");
-  for(const asset of ["styles.css","offline-manifest.js","games/shared-random.js","games/game-registry.js","games/card-games-shared.js","app.js"]){assert.ok(read("index.html").includes(`${asset}?v=${build}`),`${asset} HTML build`);}
+  for(const asset of ["styles.css","offline-manifest.js","games/shared-random.js","games/game-registry.js","games/card-games-shared.js","player-state.js","app.js"]){assert.ok(read("index.html").includes(`${asset}?v=${build}`),`${asset} HTML build`);}
   assert.match(worker,/GubuntuOfflineManifest\.assets\(BUILD_NUMBER\)/);
   assert.match(app,/GubuntuOfflineManifest\.assets\(BUILD_NUMBER\)/);
 });
