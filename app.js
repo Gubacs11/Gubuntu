@@ -6,9 +6,9 @@ const storeKey = "gubuntu-arcade-v1";
 const backupKey = `${storeKey}-backups`;
 const saveVersion = 3;
 const APP_VERSION = "1.0.0";
-const BUILD_NUMBER = 127;
+const BUILD_NUMBER = 128;
 const avatars = ["👾", "🤖", "👻", "🦊", "🐸", "🧙", "🥷", "🦖"];
-const {createDefaultPlayer:makeDefaultPlayer,mergeMissingDefaults,resetPlayerState}=GubuntuPlayerState;
+const {createDefaultPlayer:makeDefaultPlayer,normalizeChaosWorksState,mergeMissingDefaults,resetPlayerState}=GubuntuPlayerState;
 
 const games = [
   {id:"guess", title:"Számkitaláló", category:"skill", tag:"LOGIKA", icon:"🔢", color:"#31f5ff", cost:0, desc:"Találd meg a titkos számot minél kevesebb tippből!"},
@@ -32,6 +32,7 @@ const games = [
   ,{id:"salvager", title:"Neon Salvager", category:"skill", tag:"EXTRACTION", icon:"☢", color:"#ffb547", cost:0, desc:"Elágazó, magalapú állomástérkép, hat taktikai fegyver és többfázisú szektorfőnökök."}
   ,{id:"towerdefense", title:"Neon Grid Defense", category:"skill", tag:"TOWER DEFENSE", icon:"🏰", color:"#31f5ff", cost:0, desc:"Építs specializálható tornyokat, használj aktív képességeket, és védd meg a neon magot 15 módosított hullámon át."}
   ,{id:"voidminer", title:"VOID MINER", category:"skill", tag:"EXTRACTION ROGUELITE", icon:"⛏️", color:"#b56cff", cost:0, desc:"Descend. Extract. Don't get greedy. Mine a procedural abyss, then make it back with the haul."}
+  ,{id:"chaosworks", title:"CHAOS WORKS", category:"skill", tag:"FACTORY RNG", icon:"⚙️", color:"#ffb547", cost:0, desc:"Build a factory where every product is different. Manufacture, inspect, sell, scrap and hunt impossible rolls."}
 ];
 
 const gameScriptPaths=GubuntuOfflineManifest.gameModules;
@@ -131,6 +132,15 @@ achievements.push(
   {id:"void-miner-250",icon:"⬇️",name:"GOING DEEP",desc:"Reach 250 m in VOID MINER.",reward:100,test:p=>(p.voidMiner?.stats?.deepestDepth||0)>=250},
   {id:"void-miner-void",icon:"◉",name:"WHAT COULD GO WRONG?",desc:"Reach THE VOID below 700 m.",reward:180,test:p=>(p.voidMiner?.stats?.deepestDepth||0)>=700},
   {id:"void-miner-greed",icon:"📦",name:"GREED",desc:"Extract with a completely full cargo hold.",reward:120,test:p=>(p.voidMiner?.stats?.fullCargoExtractions||0)>=1}
+);
+achievements.push(
+  {id:"chaos-first-shift",icon:"⚙️",name:"FIRST SHIFT",desc:"Produce 10 Chaos Works products.",reward:60,test:p=>(p.chaosWorks?.totalProduced||0)>=10},
+  {id:"chaos-quality",icon:"◆",name:"QUALITY CONTROL",desc:"Produce a quality 90+ component.",reward:80,test:p=>(p.chaosWorks?.bestQuality||0)>=90},
+  {id:"chaos-garbage",icon:"☣",name:"ABSOLUTE GARBAGE",desc:"Produce a quality below 5 component.",reward:90,test:p=>(p.chaosWorks?.worstQuality??100)<5},
+  {id:"chaos-legendary",icon:"✦",name:"LEGENDARY ASSET",desc:"Find a Legendary component.",reward:140,test:p=>(p.chaosWorks?.legendaryFound||0)>=1},
+  {id:"chaos-anomalous",icon:"◉",name:"WHAT DID WE MAKE?",desc:"Find an Anomalous component.",reward:240,test:p=>(p.chaosWorks?.anomalousFound||0)>=1},
+  {id:"chaos-mass",icon:"▦",name:"MASS PRODUCTION",desc:"Produce 1,000 components.",reward:320,test:p=>(p.chaosWorks?.totalProduced||0)>=1000},
+  {id:"chaos-record",icon:"₲",name:"FACTORY RECORD",desc:"Produce a component worth more than ₲5,000.",reward:180,test:p=>(p.chaosWorks?.bestValue||0)>5000}
 );
 
 const quizEasy = [
@@ -299,7 +309,7 @@ const mobileControlProfiles={
   reaction:{layout:"simple",labels:{action:"GO"}},towerdefense:{layout:"direct"},penalty:{layout:"direct"},
   billiards:{layout:"direct"},starfarer:{layout:"direct"},memory:{layout:"direct"},ttt:{layout:"direct"},
   slots:{layout:"direct"},blackjack:{layout:"direct"},poker:{layout:"direct"},dice:{layout:"direct"},
-  guess:{layout:"direct"},rps:{layout:"direct"},quiz:{layout:"direct"},wreck:{layout:"direct"}
+  guess:{layout:"direct"},rps:{layout:"direct"},quiz:{layout:"direct"},wreck:{layout:"direct"},chaosworks:{layout:"direct"}
 };
 const mobileInput={up:false,down:false,left:false,right:false,action:false,action2:false,fire:false,interact:false,boost:false,brake:false,pause:false,moveX:0,moveY:0,aimX:0,aimY:0,pointers:new Map(),resetters:new Set(),resetSerial:0};
 let appliedDeviceMode=null,mountedMobileControlKey="",mobileViewportState={width:innerWidth,height:innerHeight,orientation:innerWidth>=innerHeight?"landscape":"portrait"},mobileLayoutTimer=0;
@@ -475,7 +485,7 @@ function normalizePlayer(p,index=0){
   const fallbackId=`player-${Date.now()}-${index}`;
   p=p&&typeof p==="object"?p:{};
   const defaults=makeDefaultPlayer({id:fallbackId,name:`Játékos ${index+1}`,seasonId:BATTLE_PASS_SEASON.id});
-  const objectProgress=["gameStats","openRoadMissions","activity","equipped","launchPrefs","tuning","openRoadGarage","openRoadJobs","tdProgress","cardLounge","fishing","salvager","voidMiner","starfarer","subscription","battlePass"];
+  const objectProgress=["gameStats","openRoadMissions","activity","equipped","launchPrefs","tuning","openRoadGarage","openRoadJobs","tdProgress","cardLounge","fishing","salvager","voidMiner","starfarer","chaosWorks","subscription","battlePass"];
   const arrayProgress=["inventory","achievements","favorites","vehicles","secrets"];
   objectProgress.forEach(key=>{if(!p[key]||typeof p[key]!=="object"||Array.isArray(p[key]))p[key]=defaults[key]});
   arrayProgress.forEach(key=>{if(!Array.isArray(p[key]))p[key]=defaults[key]});
@@ -525,6 +535,7 @@ function normalizePlayer(p,index=0){
   p.launchPrefs=p.launchPrefs&&typeof p.launchPrefs==="object"&&!Array.isArray(p.launchPrefs)?p.launchPrefs:{};
   p.fishing=p.fishing&&typeof p.fishing==="object"?p.fishing:{};p.fishing.rod=Math.max(1,Math.min(20,Number(p.fishing.rod)||1));p.fishing.bait=Math.max(1,Math.min(20,Number(p.fishing.bait)||1));["total","sold","bestValue"].forEach(key=>p.fishing[key]=Math.max(0,Number(p.fishing[key])||0));p.fishing.bucket=Array.isArray(p.fishing.bucket)?p.fishing.bucket:[];p.fishing.dex=p.fishing.dex&&typeof p.fishing.dex==="object"?p.fishing.dex:{};p.fishing.shop=p.fishing.shop&&typeof p.fishing.shop==="object"?p.fishing.shop:{};p.fishing.area=typeof p.fishing.area==="string"?p.fishing.area:"pond";
   p.starfarer=p.starfarer&&typeof p.starfarer==="object"?p.starfarer:{};["atlas","favorites","colonies","transmissions","eventLog","galacticNews","bridgeChoices"].forEach(key=>p.starfarer[key]=Array.isArray(p.starfarer[key])?p.starfarer[key]:[]);["upgrades","inventory","missions","codex","factions","market","living","consequence","research"].forEach(key=>p.starfarer[key]=p.starfarer[key]&&typeof p.starfarer[key]==="object"&&!Array.isArray(p.starfarer[key])?p.starfarer[key]:defaults.starfarer[key]);p.starfarer.fuel=Math.max(0,Number(p.starfarer.fuel)||0);p.starfarer.resources=Math.max(0,Number(p.starfarer.resources)||0);p.starfarer.totalScans=Math.max(0,Number(p.starfarer.totalScans)||0);p.starfarer.bestValue=Math.max(0,Number(p.starfarer.bestValue)||0);p.starfarer.sector=typeof p.starfarer.sector==="string"?p.starfarer.sector:"inner";
+  p.chaosWorks=normalizeChaosWorksState(p.chaosWorks);
   p.salvager=p.salvager&&typeof p.salvager==="object"?p.salvager:{};
   p.salvager.scrap=Math.max(0,Math.floor(Number(p.salvager.scrap)||0));
   p.salvager.xp=Math.max(0,Math.floor(Number(p.salvager.xp)||0));
@@ -1044,6 +1055,7 @@ function playerLogHtml(){
 }
 function bootFlavor(game){
   const bank={
+    chaosworks:[["FABRICATOR SAFETY CHECK BYPASSED...","Quality assurance has left the building."],["CONVEYOR MOTORS ENGAGED...","Probability is now a workplace hazard."],["QC SCANNER CALIBRATING...","The scanner requests plausible deniability."]],
     starfarer:[["BOOTING GSA-01 NAVIGATION CORE...","MIRA-9: \"I packed your optimism. It was not heavy.\""],["VOID RELAY CALIBRATING...","Please do not panic professionally."],["STAR MAP UNFOLDING...","The stars have not signed the paperwork."],["COLONY UPLINKS WARMING...","Somebody is already complaining about lamps."]],
     fishing:[["MOON CARP SIGNAL DETECTED...","Bait reality: unstable."],["LUNAR POND MODE ONLINE...","The bucket predicts something large and legally damp."],["FISH RADAR HUMMING...","One signal is too big to be polite."],["CASTING PATIENCE MODULE...","The water is looking back, casually."]],
     openroad:[["NEON ENGINE WARMING...","Road legality: questionable."],["PIXEL FUEL PRESSURIZED...","The map loaded. The roads were not consulted."],["RADIO TOWER LOCKED...","Turbo clouds are forming over the county line."],["STREETLIGHTS SYNCING...","The speed limit blinked first."]],
@@ -1085,14 +1097,15 @@ function starfarerStatusReport(){
   return `<section class="sf-status-report"><header><span>▣</span><div><small>GSA-01 STATUS REPORT</small><b>${ambientSystemLine()}</b></div></header><ul>${shuffle(lines).slice(0,4).map(x=>`<li>${esc(x)}</li>`).join("")}</ul></section>`;
 }
 const menuTiers=[
-  {id:"flagship",label:"FLAGSHIP WORLDS",title:"NAGY KALANDOK",desc:"A Gubuntu legmélyebb, legtöbb tartalommal bíró játékai.",ids:["voidminer","salvager","starfarer","openroad","fishing"]},
+  {id:"flagship",label:"FLAGSHIP WORLDS",title:"NAGY KALANDOK",desc:"A Gubuntu legmélyebb, legtöbb tartalommal bíró játékai.",ids:["chaosworks","voidminer","salvager","starfarer","openroad","fishing"]},
   {id:"arcade",label:"ARCADE SELECT",title:"KIEMELT JÁTÉKOK",desc:"Erős, újrajátszható arcade élmények.",ids:["towerdefense","billiards","wreck","snake","pac","penalty","memory"]},
   {id:"quick",label:"QUICK COIN",title:"GYORS MENETEK",desc:"Rövid kihívások egy újabb rekordért.",ids:["quiz","reaction","guess","ttt"]},
   {id:"lounge",label:"LUCK LOUNGE",title:"KÁRTYA ÉS SZERENCSE",desc:"Tét, döntés és neon szerencse.",ids:["blackjack","poker","slots","dice","rps"]}
 ];
-const libraryGenres={voidminer:"strategy",salvager:"strategy",towerdefense:"strategy",billiards:"strategy",starfarer:"strategy",blackjack:"card",poker:"card",guess:"puzzle",quiz:"puzzle",memory:"puzzle",ttt:"puzzle",snake:"arcade",pac:"arcade",wreck:"arcade",reaction:"arcade",penalty:"arcade",openroad:"arcade",fishing:"arcade",rps:"arcade",slots:"arcade",dice:"arcade"};
-const recentlyUpgraded=new Set(["voidminer","salvager","billiards","guess","rps","slots","snake","pac","quiz","memory","reaction","ttt","towerdefense"]);
+const libraryGenres={chaosworks:"simulation",voidminer:"strategy",salvager:"strategy",towerdefense:"strategy",billiards:"strategy",starfarer:"strategy",blackjack:"card",poker:"card",guess:"puzzle",quiz:"puzzle",memory:"puzzle",ttt:"puzzle",snake:"arcade",pac:"arcade",wreck:"arcade",reaction:"arcade",penalty:"arcade",openroad:"arcade",fishing:"arcade",rps:"arcade",slots:"arcade",dice:"arcade"};
+const recentlyUpgraded=new Set(["chaosworks","voidminer","salvager","billiards","guess","rps","slots","snake","pac","quiz","memory","reaction","ttt","towerdefense"]);
 const launchCatalog={
+  chaosworks:{modes:[["standard","STANDARD SHIFT"]],difficulties:[["normal","QUALITY NOT GUARANTEED"]],controls:"MOUSE / TOUCH • CHOOSE • PRODUCE • INSPECT",length:"OPEN-ENDED"},
   voidminer:{modes:[["standard","STANDARD DESCENT"],["daily","DAILY SEED"]],difficulties:[["normal","MINER FRIENDLY"],["hard","VOID HUNGRY"]],controls:"WASD / ARROWS • MOUSE AIM • LMB / SPACE MINE • E EXTRACT / USE • SHIFT DASH",length:"8–20 MIN"},
   salvager:{modes:[["standard","STANDARD CONTRACT"],["nightmare","NIGHTMARE CONTRACT"]],difficulties:[["normal","SALVAGE RUN"],["hard","HOSTILE STATION"]],controls:"WASD / ARROWS • MOUSE / CLICK • SPACE FIRE • SHIFT DASH • E INTERACT",length:"5–10 MIN"},
   snake:{modes:[["classic","CLASSIC"],["survival","SURVIVAL"],["time","TIME ATTACK"]],controls:"WASD / ARROW KEYS / TOUCH PAD",length:"3–10 MIN"},
@@ -1124,7 +1137,7 @@ function renderLobby(){
   $("#lobby-spotlight").innerHTML=`<section class="arcade-newswire"><header><span>● LIVE</span><b>GUBUNTU NEWSWIRE</b></header>${news.map((n,i)=>`<button data-game="${n.game}" style="--delay:${i}"><span>${n.icon}</span><div><small>${n.label}</small><b>${esc(n.text)}</b></div></button>`).join("")}</section><section class="ambient-ad"><small>${ad.label}</small><p>„${esc(ad.text)}”</p></section>${playerLogHtml()}${capitalHtml}${lastHtml}<button class="spot-card featured-card" data-game="${featured.id}" style="--accent:${featured.color}"><span>${featured.icon}</span><div><small>MAI AJÁNLAT</small><b>${featured.title}</b><em>${featured.tag} • ${featured.cost?featured.cost+" ●":"INGYEN"}</em></div></button>`;
 }
 function menuAttract(g,plays,winRate){
-  const vibe={voidminer:"VOID SIGNAL",starfarer:"NAV CORE",openroad:"ENGINE HOT",fishing:"MOON SIGNAL",wreck:"DAMAGE ALERT",slots:"JACKPOT HUM",blackjack:"DEALER READY",poker:"HOLD/DRAW",snake:"CARTRIDGE OK",pac:"MAZE LIVE",penalty:"GOAL CAM",memory:"MATCH GRID",reaction:"TURBO LAMP",quiz:"BRAIN TEST",guess:"LOGIC LOCK",ttt:"GRID DUEL",dice:"DICE LAB",rps:"DUEL SYNC"}[g.id]||"CABINET LIVE";
+  const vibe={chaosworks:"FACTORY HOT",voidminer:"VOID SIGNAL",starfarer:"NAV CORE",openroad:"ENGINE HOT",fishing:"MOON SIGNAL",wreck:"DAMAGE ALERT",slots:"JACKPOT HUM",blackjack:"DEALER READY",poker:"HOLD/DRAW",snake:"CARTRIDGE OK",pac:"MAZE LIVE",penalty:"GOAL CAM",memory:"MATCH GRID",reaction:"TURBO LAMP",quiz:"BRAIN TEST",guess:"LOGIC LOCK",ttt:"GRID DUEL",dice:"DICE LAB",rps:"DUEL SYNC"}[g.id]||"CABINET LIVE";
   const pulse=plays?`${plays} RUN • ${winRate}% WIN`:(g.cost?`${g.cost} COIN ENTRY`:"FREE PLAY");
   return `<div class="attract-strip"><span>${vibe}</span><i>${pulse}</i></div>`;
 }

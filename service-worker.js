@@ -1,7 +1,7 @@
 "use strict";
 
 const APP_VERSION="1.0.0";
-const BUILD_NUMBER=127;
+const BUILD_NUMBER=128;
 const CACHE_PREFIX="gubuntu-arcade-";
 importScripts(`./offline-manifest.js?v=${BUILD_NUMBER}`);
 const SHELL_CACHE=GubuntuOfflineManifest.cacheName(APP_VERSION,BUILD_NUMBER);

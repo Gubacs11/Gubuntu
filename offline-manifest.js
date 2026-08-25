@@ -7,7 +7,8 @@
     ttt:"tic-tac-toe.js",snake:"snake.js",pac:"pixel-pac.js",wreck:"wreck-it.js",
     fishing:"fishing.js",openroad:"open-road.js",starfarer:"starfarer.js",
     blackjack:"blackjack.js",poker:"poker.js",billiards:"billiards.js",
-    salvager:"neon-salvager.js",towerdefense:"tower-defense.js",voidminer:"void-miner.js"
+    salvager:"neon-salvager.js",towerdefense:"tower-defense.js",voidminer:"void-miner.js",
+    chaosworks:"chaos-works.js"
   });
   const versioned=(path,build)=>`${path}?v=${build}`;
   const assets=build=>Object.freeze([

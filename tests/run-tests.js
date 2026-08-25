@@ -75,13 +75,31 @@ test("Canonical reset removes all known and unknown progression while preserving
   Object.assign(player,{coins:99999,xp:42000,plays:88,totalWins:55,totalLosses:12,achievements:["all"],inventory:["avatar-crown","theme-royal"],gameStats:{snake:{plays:30,wins:20}},openRoadMissions:{city:true},vehicles:["compact","scarab"],secrets:["moon"],tuning:{scarab:{engine:4}},openRoadGarage:{scarab:{mileage:999}},openRoadJobs:{completed:50,gold:40,bestRatings:{race:"GOLD"}},activity:{"2026-08-25":12},playTimeMs:999999,coinsEarned:8888,equipped:{cabinet:"gold"},unknownFutureProgress:{level:9001},avatar:"😎",color:"#c36bff"});
   player.starfarer={atlas:[{id:"planet"}],colonies:[{id:"colony"}],upgrades:{scanner:9}};player.fishing={bucket:[{fish:"boss"}],dex:{boss:1},shop:{cooler:9}};
   player.salvager={xp:9000,unlocks:["everything"],runs:90};player.voidMiner={credits:5000,upgrades:{drill:4},discoveries:{resources:["void"]},stats:{blocksMined:999}};
-  player.tdProgress={xp:8000,level:40,unlockedMaps:["all"],completedContracts:["boss"]};player.cardLounge={reputation:999,tablesUnlocked:["vip"],completedContracts:["all"]};
+  player.tdProgress={xp:8000,level:40,unlockedMaps:["all"],completedContracts:["boss"]};player.cardLounge={reputation:999,tablesUnlocked:["vip"],completedContracts:["all"]};player.chaosWorks={cash:99999,totalProduced:500,keptProducts:[{id:"old"}],unknownChaosProgress:true};
   player.battlePass={seasonId:"season-test",xp:1900,claimedFree:[1,2],claimedPremium:[1]};player.favorites=["snake"];player.launchPrefs={snake:{difficulty:"hard"}};player.subscription={plan:"premium",status:"active",autoRenew:true,provider:"test"};
   resetPlayerState(player,{seasonId:"season-test",baseAvatars:["👾","🤖"],baseColors:["#31f5ff","#ff3eb5"]});
   assert.strictEqual(player,reference);assert.equal(player.id,"keep-id");assert.equal(player.name,"Keep Name");assert.deepEqual([...player.favorites],["snake"]);assert.equal(player.subscription.plan,"premium");
   assert.equal(player.coins,100);assert.equal(player.xp,0);assert.equal(player.plays,0);assert.equal(player.rank,"ÚJONC");assert.equal(player.avatar,"👾");assert.equal(player.color,"#31f5ff");
   assert.equal("unknownFutureProgress" in player,false);assert.deepEqual([...player.inventory],[]);assert.deepEqual({...player.equipped},{});assert.deepEqual({...player.gameStats},{});
-  assert.deepEqual([...player.vehicles],["compact"]);assert.equal(player.openRoadJobs.completed,0);assert.equal(player.starfarer.atlas.length,0);assert.equal(player.fishing.bucket.length,0);assert.equal(player.salvager.xp,0);assert.equal(player.voidMiner.credits,0);assert.equal(player.tdProgress.level,1);assert.equal(player.cardLounge.reputation,0);assert.equal(player.battlePass.xp,0);assert.equal(player.playTimeMs,0);
+  assert.deepEqual([...player.vehicles],["compact"]);assert.equal(player.openRoadJobs.completed,0);assert.equal(player.starfarer.atlas.length,0);assert.equal(player.fishing.bucket.length,0);assert.equal(player.salvager.xp,0);assert.equal(player.voidMiner.credits,0);assert.equal(player.tdProgress.level,1);assert.equal(player.cardLounge.reputation,0);assert.equal(player.chaosWorks.cash,500);assert.equal(player.chaosWorks.totalProduced,0);assert.equal(player.chaosWorks.unknownChaosProgress,undefined);assert.equal(player.battlePass.xp,0);assert.equal(player.playTimeMs,0);
+});
+
+test("Chaos Works generator creates bounded, finite, product-specific components",()=>{
+  const context={GubuntuGames:{register:()=>{}}};load("games/chaos-works.js",context);const core=context.ChaosWorksCore;let seed=123456;const rng=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296};
+  for(const type of Object.keys(core.PRODUCT_TYPES))for(let i=0;i<80;i++){const product=core.generateProduct(type,rng);assert.equal(product.type,type);assert.ok(product.quality>=0&&product.quality<=100);assert.ok(Number.isFinite(product.value)&&product.value>=0);assert.ok(Object.keys(product.stats).length>=4);for(const value of Object.values(product.stats))assert.ok(Number.isFinite(value)&&value>=-5&&value<=105);assert.ok(["COMMON","UNCOMMON","RARE","EPIC","LEGENDARY","PROTOTYPE","ANOMALOUS"].includes(product.rarity));}
+});
+
+test("Chaos Works quality is weighted toward the middle",()=>{
+  const context={GubuntuGames:{register:()=>{}}};load("games/chaos-works.js",context);const {rollQuality}=context.ChaosWorksCore;let seed=7;const rng=()=>{seed=(seed*1103515245+12345)>>>0;return seed/4294967296},values=Array.from({length:5000},()=>rollQuality(rng,{})),middle=values.filter(value=>value>=30&&value<=75).length,extreme=values.filter(value=>value<10||value>95).length;assert.ok(middle>extreme*5,`${middle} middle vs ${extreme} extreme`);
+});
+
+test("Chaos Works traits, anomalies, and records are deterministic and meaningful",()=>{
+  const playerContext=load("player-state.js"),context={GubuntuGames:{register:()=>{}}};load("games/chaos-works.js",context);const core=context.ChaosWorksCore,base={strength:50,precision:50,corrosion:50,weight:50},modified=core.applyTraits(base,["reinforced"],()=>.5);assert.ok(modified.strength>base.strength);assert.ok(modified.weight>base.weight);
+  const anomaly=core.generateProduct("bearing",()=>.999,{forceAnomaly:true,traits:["impossible"]});assert.equal(anomaly.rarity,"ANOMALOUS");assert.ok(anomaly.anomaly?.description);const state=playerContext.GubuntuPlayerState.createDefaultChaosWorksState(),first=core.updateArchive(state,anomaly);assert.ok(first.includes("mostValuable"));assert.equal(state.archive.firstAnomalous.id,anomaly.id);const weaker={...anomaly,id:"weaker",value:1,quality:1,rarityScore:1};core.updateArchive(state,weaker);assert.equal(state.records.mostValuable.id,anomaly.id);
+});
+
+test("Chaos Works save normalization preserves progress and bounds collections",()=>{
+  const api=load("player-state.js").GubuntuPlayerState,input={cash:900,totalProduced:42,selectedRecipe:"gear",keptProducts:Array.from({length:90},(_,i)=>({id:`p${i}`})),recentProducts:Array.from({length:30},(_,i)=>({id:`r${i}`})),upgrades:{precisionTooling:3}};const state=api.normalizeChaosWorksState(input);assert.equal(state.cash,900);assert.equal(state.totalProduced,42);assert.equal(state.selectedRecipe,"gear");assert.equal(state.upgrades.precisionTooling,3);assert.equal(state.keptProducts.length,70);assert.equal(state.recentProducts.length,12);assert.equal(state.version,1);
 });
 
 test("All declared games map to existing, uniquely registering modules",()=>{
