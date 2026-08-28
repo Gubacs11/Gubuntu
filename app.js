@@ -6,7 +6,7 @@ const storeKey = "gubuntu-arcade-v1";
 const backupKey = `${storeKey}-backups`;
 const saveVersion = 3;
 const APP_VERSION = "1.0.0";
-const BUILD_NUMBER = 129;
+const BUILD_NUMBER = 132;
 const avatars = ["👾", "🤖", "👻", "🦊", "🐸", "🧙", "🥷", "🦖"];
 const {createDefaultPlayer:makeDefaultPlayer,normalizeChaosWorksState,mergeMissingDefaults,resetPlayerState}=GubuntuPlayerState;
 

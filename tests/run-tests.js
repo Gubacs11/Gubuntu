@@ -89,6 +89,10 @@ test("Chaos Works generator creates bounded, finite, product-specific components
   for(const type of Object.keys(core.PRODUCT_TYPES))for(let i=0;i<80;i++){const product=core.generateProduct(type,rng);assert.equal(product.type,type);assert.ok(product.quality>=0&&product.quality<=100);assert.ok(Number.isFinite(product.value)&&product.value>=0);assert.ok(Object.keys(product.stats).length>=4);for(const value of Object.values(product.stats))assert.ok(Number.isFinite(value)&&value>=-5&&value<=105);assert.ok(["COMMON","UNCOMMON","RARE","EPIC","LEGENDARY","PROTOTYPE","ANOMALOUS"].includes(product.rarity));}
 });
 
+test("Chaos Works renders a distinct mechanical illustration for every Tier I product",()=>{
+  const source=read("games/chaos-works.js");for(const type of ["bolt","gear","bearing","spring"])assert.match(source,new RegExp(`${type}:\\x60<svg`),`${type} has dedicated SVG art`);assert.match(source,/cw-part-\$\{safeType\}/);assert.doesNotMatch(source,/cw-moving-product[^\n]*recipe\.icon/);assert.match(source,/cw-cycle-stages/);assert.match(source,/cw-blueprint/);
+});
+
 test("Chaos Works quality is weighted toward the middle",()=>{
   const context={GubuntuGames:{register:()=>{}}};load("games/chaos-works.js",context);const {rollQuality}=context.ChaosWorksCore;let seed=7;const rng=()=>{seed=(seed*1103515245+12345)>>>0;return seed/4294967296},values=Array.from({length:5000},()=>rollQuality(rng,{})),middle=values.filter(value=>value>=30&&value<=75).length,extreme=values.filter(value=>value<10||value>95).length;assert.ok(middle>extreme*5,`${middle} middle vs ${extreme} extreme`);
 });
